@@ -1,0 +1,17 @@
+<mujoco model="Scene">
+  <option integrator="implicitfast" timestep="0.001"/>
+
+  <statistic center="0 0 0.5" extent="2"/>
+
+  <visual>
+    <headlight ambient="0.3 0.3 0.3" diffuse="0.6 0.6 0.6" specular="0.2 0.2 0.2"/>
+    <global azimuth="135" elevation="-25"/>
+  </visual>
+
+  <worldbody>
+    <light name="top_light" pos="0 0 2.5" dir="0 0 -1" diffuse="0.8 0.8 0.8" specular="0.3 0.3 0.3" directional="true"/>
+  </worldbody>
+
+  <include file="aic_robot.xml"/>
+  <include file="aic_world.xml"/>
+</mujoco>
