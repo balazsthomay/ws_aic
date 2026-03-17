@@ -1,0 +1,21 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+SPEC.md
+CLAUDE.md
+.claude/
+.env
+.coverage
+.superset
+MUJOCO_LOG.TXT
+
+# Generated MuJoCo meshes (re-generate with scripts/generate_meshes.py)
+src/aic/aic_utils/aic_mujoco/mjcf/meshes/
