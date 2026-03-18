@@ -97,21 +97,21 @@
     <body name="enclosure_link">
       <inertial pos="0 0 0" mass="1" diaginertia="1 1 1" />
       <geom name="v1015026001_collider_box" class="world_default" size="0.75 0.569492 0.75" pos="-0.010998 0.009283 0.569706" quat="-1.22475e-07 1.22474e-07 -0.707107 -0.707107" type="box" group="3" contype="0" conaffinity="0" />
-      <geom name="v1015028001_collider_box" class="world_default" size="0.0254 0.0254 1.25" pos="0.713602 0.733883 1.3292" quat="1.73205e-07 0 0 -1" type="box" group="3"  contype="0" conaffinity="0" />
-      <geom name="v1015013001_collider_box" class="world_default" size="0.0304 0.75 0.75" pos="-0.010998 0.009283 2.5488" quat="0.707107 0 -0.707107 0" type="box" group="3"  contype="0" conaffinity="0" />
-      <geom name="v1015027_collider_box" class="world_default" size="0.0254 0.0254 1.25" pos="-0.735598 0.733883 1.3292" quat="1.73205e-07 0 0 -1" type="box" group="3"  contype="0" conaffinity="0" />
-      <geom name="v1015029_collider_box" class="world_default" size="0.0254 0.0254 1.25" pos="-0.735598 -0.715317 1.3292" quat="0 1.73205e-07 -1 -1.73205e-07" type="box" group="3"  contype="0" conaffinity="0" />
-      <geom name="v1015030_collider_box" class="world_default" size="0.0254 0.0254 1.25" pos="0.713602 -0.715317 1.3292" quat="1.73205e-07 0 0 -1" type="box" group="3"  contype="0" conaffinity="0" />
+      <geom name="v1015028001_collider_box" class="world_default" size="0.0254 0.0254 1.25" pos="0.713602 0.733883 1.3292" quat="1.73205e-07 0 0 -1" type="box" group="3" contype="0" conaffinity="0" />
+      <geom name="v1015013001_collider_box" class="world_default" size="0.0304 0.75 0.75" pos="-0.010998 0.009283 2.5488" quat="0.707107 0 -0.707107 0" type="box" group="3" contype="0" conaffinity="0" />
+      <geom name="v1015027_collider_box" class="world_default" size="0.0254 0.0254 1.25" pos="-0.735598 0.733883 1.3292" quat="1.73205e-07 0 0 -1" type="box" group="3" contype="0" conaffinity="0" />
+      <geom name="v1015029_collider_box" class="world_default" size="0.0254 0.0254 1.25" pos="-0.735598 -0.715317 1.3292" quat="0 1.73205e-07 -1 -1.73205e-07" type="box" group="3" contype="0" conaffinity="0" />
+      <geom name="v1015030_collider_box" class="world_default" size="0.0254 0.0254 1.25" pos="0.713602 -0.715317 1.3292" quat="1.73205e-07 0 0 -1" type="box" group="3" contype="0" conaffinity="0" />
       <geom name="enclosure_visual" class="world_default" type="mesh" contype="0" conaffinity="0" material="material_d3a88c2c9b67693c0b83a473c736f84a8297c1036d4dce4e6c4e840aec16baa7_enclosure_visual_V1014952.001" mesh="d3a88c2c9b67693c0b83a473c736f84a8297c1036d4dce4e6c4e840aec16baa7_enclosure_visual_V1014952.001" />
       <geom name="enclosure_visual_0" class="world_default" type="mesh" contype="0" conaffinity="0" material="material_d3a88c2c9b67693c0b83a473c736f84a8297c1036d4dce4e6c4e840aec16baa7_enclosure_visual_V1014952.001_1" mesh="d3a88c2c9b67693c0b83a473c736f84a8297c1036d4dce4e6c4e840aec16baa7_enclosure_visual_V1014952.001_1" />
       <geom name="light_visual" class="world_default" type="mesh" contype="0" conaffinity="0" material="material_d3a88c2c9b67693c0b83a473c736f84a8297c1036d4dce4e6c4e840aec16baa7_light_visual_Plane.001" mesh="d3a88c2c9b67693c0b83a473c736f84a8297c1036d4dce4e6c4e840aec16baa7_light_visual_Plane.001" />
     </body>
     <body name="enclosure_walls_link">
       <inertial pos="0 0 0" mass="1" diaginertia="1 1 1" />
-      <geom name="v1015062006_collider_box" class="world_default" size="0.0250005 0.6796 0.6892" pos="-0.010998 0.734284 1.8288" quat="0.5 0.5 -0.5 -0.5" type="box" group="3"  contype="0" conaffinity="0" />
-      <geom name="v1015062005_collider_box" class="world_default" size="0.6892 0.6796 0.025" pos="-0.735998 0.009283 1.8288" quat="0.5 0.5 -0.5 -0.5" type="box" group="3"  contype="0" conaffinity="0" />
-      <geom name="v1015062007_collider_box" class="world_default" size="0.025 0.6846 0.6892" pos="-0.010998 -0.715717 1.8338" quat="0.5 0.5 -0.5 -0.5" type="box" group="3"  contype="0" conaffinity="0" />
-      <geom name="v1015062008_collider_box" class="world_default" size="0.6892 0.6846 0.025" pos="0.714002 0.009283 1.8338" quat="0.5 0.5 -0.5 -0.5" type="box" group="3"  contype="0" conaffinity="0" />
+      <geom name="v1015062006_collider_box" class="world_default" size="0.0250005 0.6796 0.6892" pos="-0.010998 0.734284 1.8288" quat="0.5 0.5 -0.5 -0.5" type="box" group="3" contype="0" conaffinity="0" />
+      <geom name="v1015062005_collider_box" class="world_default" size="0.6892 0.6796 0.025" pos="-0.735998 0.009283 1.8288" quat="0.5 0.5 -0.5 -0.5" type="box" group="3" contype="0" conaffinity="0" />
+      <geom name="v1015062007_collider_box" class="world_default" size="0.025 0.6846 0.6892" pos="-0.010998 -0.715717 1.8338" quat="0.5 0.5 -0.5 -0.5" type="box" group="3" contype="0" conaffinity="0" />
+      <geom name="v1015062008_collider_box" class="world_default" size="0.6892 0.6846 0.025" pos="0.714002 0.009283 1.8338" quat="0.5 0.5 -0.5 -0.5" type="box" group="3" contype="0" conaffinity="0" />
     </body>
     <body name="floor_link">
       <inertial pos="0 0 0" mass="1" diaginertia="1 1 1" />
@@ -121,250 +121,6 @@
       <geom name="walls_visual_0" class="world_default" type="mesh" contype="0" conaffinity="0" material="material_3cfd66d2e9d880eae3d6e7923ec9058d874bf1526844466939fc4924d98ff9b9_walls_visual_merged_1" mesh="3cfd66d2e9d880eae3d6e7923ec9058d874bf1526844466939fc4924d98ff9b9_walls_visual_merged_1" />
       <geom name="walls_visual_1" class="world_default" type="mesh" contype="0" conaffinity="0" material="material_3cfd66d2e9d880eae3d6e7923ec9058d874bf1526844466939fc4924d98ff9b9_walls_visual_Plane.003_1" mesh="3cfd66d2e9d880eae3d6e7923ec9058d874bf1526844466939fc4924d98ff9b9_walls_visual_Plane.003_1" />
       <geom name="walls_visual_2" class="world_default" type="mesh" contype="0" conaffinity="0" material="material_3cfd66d2e9d880eae3d6e7923ec9058d874bf1526844466939fc4924d98ff9b9_walls_visual_Plane.002" mesh="3cfd66d2e9d880eae3d6e7923ec9058d874bf1526844466939fc4924d98ff9b9_walls_visual_Plane.002" />
-    </body>
-    <body name="cable_end_0" childclass="cable_default" pos="0.171400 0.020606 1.511889" quat="0.712741 0.312130 -0.052173 0.625982">
-      <!-- freejoint removed: cable end is fixed to world (attached to task board) -->
-      <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-      <geom name="base_vis" class="world_default" size="0.002" contype="0" conaffinity="0" />
-      <plugin instance="composite" />
-      <body name="cable_connection_0" pos="-2.48032e-08 2.17152e-08 -1.45797e-07" quat="0.922729 -0.0944968 -0.331446 0.172583">
-        <inertial pos="0 0 0" mass="0.01" diaginertia="1e-6 1e-6 1e-6" />
-        <joint name="joint_connection_end_0" class="cable_default" pos="0 0 0" type="ball" damping="5.0" armature="0.1" />
-        <geom name="visual_0_0" class="world_default" size="0.001 0.00180278" pos="-0.00180278 0.002 0" quat="0.676768 0.204909 0.676764 -0.204908" type="cylinder" contype="0" conaffinity="0" />
-        <geom name="visual_1_0" class="world_default" size="0.001 0.00180278" pos="-0.00180278 -0.002 0" quat="0.676768 -0.204909 0.676764 0.204908" type="cylinder" contype="0" conaffinity="0" />
-        <plugin instance="composite" />
-        <body name="link_1" pos="0.00170632 -0.00556858 -0.0232827" quat="-0.0670116 -0.276934 -0.95308 0.102252">
-          <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-          <joint name="joint_end_0" pos="0 0 -0.024" type="ball" />
-          <geom name="link_1_collision" size="0.002 0.018" pos="0 0 0.006" type="cylinder" group="3" />
-          <geom name="sphere_1_collision" size="0.002" pos="0 0 0.024" group="3" />
-          <geom name="link_1_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-          <geom name="sphere_1_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-          <plugin instance="composite" />
-          <body name="link_2" pos="0.0064563 -0.00759576 0.045832" quat="0.976992 0.159419 0.140563 -0.0177353">
-            <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-            <joint name="joint_1" pos="0 0 -0.024" type="ball" />
-            <geom name="link_2_collision" size="0.002 0.024" type="cylinder" group="3" />
-            <geom name="sphere_2_collision" size="0.002" pos="0 0 0.024" group="3" />
-            <geom name="link_2_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-            <geom name="sphere_2_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-            <plugin instance="composite" />
-            <body name="link_3" pos="0.000666041 -0.00668751 0.0470402" quat="0.98975 0.140425 0.0168223 -0.0198334">
-              <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-              <joint name="joint_2" pos="0 0 -0.024" type="ball" />
-              <geom name="link_3_collision" size="0.002 0.024" type="cylinder" group="3" />
-              <geom name="sphere_3_collision" size="0.002" pos="0 0 0.024" group="3" />
-              <geom name="link_3_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-              <geom name="sphere_3_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-              <plugin instance="composite" />
-              <body name="link_4" pos="-0.00201756 -0.0046759 0.0474536" quat="0.994004 0.0989623 -0.0399132 -0.0238771">
-                <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-                <joint name="joint_3" pos="0 0 -0.024" type="ball" />
-                <geom name="link_4_collision" size="0.002 0.024" type="cylinder" group="3" />
-                <geom name="sphere_4_collision" size="0.002" pos="0 0 0.024" group="3" />
-                <geom name="link_4_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-                <geom name="sphere_4_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                <plugin instance="composite" />
-                <body name="link_5" pos="-0.00359934 -0.0031378 0.0475207" quat="0.994211 0.0686286 -0.0727025 -0.0393501">
-                  <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-                  <joint name="joint_4" pos="0 0 -0.024" type="ball" />
-                  <geom name="link_5_collision" size="0.002 0.024" type="cylinder" group="3" />
-                  <geom name="sphere_5_collision" size="0.002" pos="0 0 0.024" group="3" />
-                  <geom name="link_5_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-                  <geom name="sphere_5_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                  <plugin instance="composite" />
-                  <body name="link_6" pos="-0.00400601 -0.00179596 0.0475953" quat="0.993829 0.0427394 -0.0813241 -0.0621514">
-                    <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-                    <joint name="joint_5" pos="0 0 -0.024" type="ball" />
-                    <geom name="link_6_collision" size="0.002 0.024" type="cylinder" group="3" />
-                    <geom name="sphere_6_collision" size="0.002" pos="0 0 0.024" group="3" />
-                    <geom name="link_6_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-                    <geom name="sphere_6_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                    <plugin instance="composite" />
-                    <body name="link_7" pos="-0.00359567 -0.000736965 0.0477182" quat="0.993406 0.0217587 -0.0735419 -0.0852205">
-                      <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-                      <joint name="joint_6" pos="0 0 -0.024" type="ball" />
-                      <geom name="link_7_collision" size="0.002 0.024" type="cylinder" group="3" />
-                      <geom name="sphere_7_collision" size="0.002" pos="0 0 0.024" group="3" />
-                      <geom name="link_7_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-                      <geom name="sphere_7_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                      <plugin instance="composite" />
-                      <body name="link_8" pos="-0.00255335 0.000119986 0.0478642" quat="0.993512 0.00286058 -0.0532556 -0.100445">
-                        <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-                        <joint name="joint_7" pos="0 0 -0.024" type="ball" />
-                        <geom name="link_8_collision" size="0.002 0.024" type="cylinder" group="3" />
-                        <geom name="sphere_8_collision" size="0.002" pos="0 0 0.024" group="3" />
-                        <geom name="link_8_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-                        <geom name="sphere_8_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                        <plugin instance="composite" />
-                        <body name="link_9" pos="-0.00133737 0.000859059 0.0479485" quat="0.994153 -0.0149483 -0.0295699 -0.102776">
-                          <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-                          <joint name="joint_8" pos="0 0 -0.024" type="ball" />
-                          <geom name="link_9_collision" size="0.002 0.024" type="cylinder" group="3" />
-                          <geom name="sphere_9_collision" size="0.002" pos="0 0 0.024" group="3" />
-                          <geom name="link_9_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-                          <geom name="sphere_9_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                          <plugin instance="composite" />
-                          <body name="link_10" pos="-0.000441179 0.00156015 0.0479454" quat="0.994979 -0.0314896 -0.0122296 -0.0942127">
-                            <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-                            <joint name="joint_9" pos="0 0 -0.024" type="ball" />
-                            <geom name="link_10_collision" size="0.002 0.024" type="cylinder" group="3" />
-                            <geom name="sphere_10_collision" size="0.002" pos="0 0 0.024" group="3" />
-                            <geom name="link_10_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-                            <geom name="sphere_10_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                            <plugin instance="composite" />
-                            <body name="link_11" pos="0.00114853 0.00243771 0.0478493" quat="0.994284 -0.0528353 0.0192331 -0.0907645">
-                              <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-                              <joint name="joint_10" pos="0 0 -0.024" type="ball" />
-                              <geom name="link_11_collision" size="0.002 0.024" type="cylinder" group="3" />
-                              <geom name="sphere_11_collision" size="0.002" pos="0 0 0.024" group="3" />
-                              <geom name="link_11_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-                              <geom name="sphere_11_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                              <plugin instance="composite" />
-                              <body name="link_12" pos="0.00319193 0.00397127 0.0474547" quat="0.991985 -0.0875655 0.0610639 -0.0676033">
-                                <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-                                <joint name="joint_11" pos="0 0 -0.024" type="ball" />
-                                <geom name="link_12_collision" size="0.002 0.024" type="cylinder" group="3" />
-                                <geom name="sphere_12_collision" size="0.002" pos="0 0 0.024" group="3" />
-                                <geom name="link_12_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-                                <geom name="sphere_12_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                                <plugin instance="composite" />
-                                <body name="link_13" pos="0.00477094 0.00576188 0.0468049" quat="0.986645 -0.125566 0.0955868 -0.040351">
-                                  <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-                                  <joint name="joint_12" pos="0 0 -0.024" type="ball" />
-                                  <geom name="link_13_collision" size="0.002 0.024" type="cylinder" group="3" />
-                                  <geom name="sphere_13_collision" size="0.002" pos="0 0 0.024" group="3" />
-                                  <geom name="link_13_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-                                  <geom name="sphere_13_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                                  <plugin instance="composite" />
-                                  <body name="link_14" pos="0.005839 0.00733455 0.0460941" quat="0.979848 -0.157594 0.122011 -0.0132488">
-                                    <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-                                    <joint name="joint_13" pos="0 0 -0.024" type="ball" />
-                                    <geom name="link_14_collision" size="0.002 0.024" type="cylinder" group="3" />
-                                    <geom name="sphere_14_collision" size="0.002" pos="0 0 0.024" group="3" />
-                                    <geom name="link_14_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-                                    <geom name="sphere_14_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                                    <plugin instance="composite" />
-                                    <body name="link_15" pos="0.00648458 0.00806215 0.0456562" quat="0.975213 -0.170653 0.140422 0.0109129">
-                                      <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-                                      <joint name="joint_14" pos="0 0 -0.024" type="ball" />
-                                      <geom name="link_15_collision" size="0.002 0.024" type="cylinder" group="3" />
-                                      <geom name="sphere_15_collision" size="0.002" pos="0 0 0.024" group="3" />
-                                      <geom name="link_15_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-                                      <geom name="sphere_15_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                                      <plugin instance="composite" />
-                                      <body name="link_16" pos="0.00662934 0.0075781 0.0457874" quat="0.976219 -0.157324 0.146215 0.0294472">
-                                        <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-                                        <joint name="joint_15" pos="0 0 -0.024" type="ball" />
-                                        <geom name="link_16_collision" size="0.002 0.024" type="cylinder" group="3" />
-                                        <geom name="sphere_16_collision" size="0.002" pos="0 0 0.024" group="3" />
-                                        <geom name="link_16_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-                                        <geom name="sphere_16_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                                        <plugin instance="composite" />
-                                        <body name="link_17" pos="0.00635258 0.00595334 0.0463669" quat="0.981986 -0.120488 0.139748 0.0407034">
-                                          <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-                                          <joint name="joint_16" pos="0 0 -0.024" type="ball" />
-                                          <geom name="link_17_collision" size="0.002 0.024" type="cylinder" group="3" />
-                                          <geom name="sphere_17_collision" size="0.002" pos="0 0 0.024" group="3" />
-                                          <geom name="link_17_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-                                          <geom name="sphere_17_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                                          <plugin instance="composite" />
-                                          <body name="link_18" pos="0.00575653 0.003482 0.047038" quat="0.988962 -0.06784 0.124269 0.0436973">
-                                            <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-                                            <joint name="joint_17" pos="0 0 -0.024" type="ball" />
-                                            <geom name="link_18_collision" size="0.002 0.024" type="cylinder" group="3" />
-                                            <geom name="sphere_18_collision" size="0.002" pos="0 0 0.024" group="3" />
-                                            <geom name="link_18_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-                                            <geom name="sphere_18_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                                            <plugin instance="composite" />
-                                            <body name="link_19" pos="0.00550013 0.00141785 0.0473194" quat="0.992157 -0.0253624 0.116454 0.0376818">
-                                              <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-                                              <joint name="joint_18" pos="0 0 -0.024" type="ball" />
-                                              <geom name="link_19_collision" size="0.002 0.024" type="cylinder" group="3" />
-                                              <geom name="sphere_19_collision" size="0.002" pos="0 0 0.024" group="3" />
-                                              <geom name="link_19_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-                                              <geom name="sphere_19_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                                              <plugin instance="composite" />
-                                              <body name="link_20" pos="0.00534656 -0.00101358 0.0473769" quat="0.993097 0.0243171 0.111486 0.027151">
-                                                <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
-                                                <joint name="joint_19" pos="0 0 -0.024" type="ball" />
-                                                <geom name="link_20_collision" size="0.002 0.024" type="cylinder" group="3" />
-                                                <geom name="sphere_20_collision" size="0.002" pos="0 0 0.024" group="3" />
-                                                <geom name="link_20_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
-                                                <geom name="sphere_20_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                                                <plugin instance="composite" />
-                                                <body name="cable_connection_1" pos="1.18118e-06 -3.36725e-07 0.0240001" quat="0.773544 0.0588014 -0.629752 -0.039807">
-                                                  <inertial pos="0 0 0" mass="0.01" diaginertia="4e-4 4e-4 4e-4" />
-                                                  <joint name="joint_connection_end_1" class="cable_default" pos="0 0 0" type="ball" />
-                                                  <geom name="collision_0" class="world_default" size="0.001 0.00367636" pos="0.00367636 -0.00425 0" quat="0.673802 0.214463 0.673798 -0.214461" type="cylinder" group="3" />
-                                                  <geom name="collision_1" class="world_default" size="0.001 0.00367636" pos="0.00367636 0.00425 0" quat="0.673802 -0.214463 0.673798 0.214461" type="cylinder" group="3" />
-                                                  <geom name="visual_0" class="world_default" size="0.001 0.00367636" pos="0.00367636 -0.00425 0" quat="0.673802 0.214463 0.673798 -0.214461" type="cylinder" contype="0" conaffinity="0" />
-                                                  <geom name="visual_1" class="world_default" size="0.001 0.00367636" pos="0.00367636 0.00425 0" quat="0.673802 -0.214463 0.673798 0.214461" type="cylinder" contype="0" conaffinity="0" />
-                                                  <plugin instance="composite" />
-                                                  <body name="sc_plug_link" pos="0.0520001 -2.50452e-10 -3.85925e-08" quat="1 -9.69236e-08 -4.66151e-08 -3.51934e-09">
-                                                    <inertial pos="-0.0113552 5.95326e-05 9.66547e-06" quat="0.000666424 0.706845 -0.000660251 0.707368" mass="0.04" diaginertia="8.92011e-06 7.22349e-06 2.15571e-06" />
-                                                    <geom name="housing blue_predeterminado005_collider_box" class="world_default" size="0.006861 0.0045 0.00365" pos="0.002539 0.006344 4e-06" type="box" group="3" />
-                                                    <geom name="housing blue_predeterminado005_collider_box.001" class="world_default" size="0.006861 0.0045 0.00365" pos="0.002539 -0.006344 4e-06" type="box" group="3" />
-                                                    <geom name="cube002_collider_box" class="world_default" size="0.006275 0.0125 0.00505" pos="-0.010291 0 0" type="box" group="3" />
-                                                    <geom name="cylinder011_collider_cylinder" class="world_default" size="0.0029 0.014605" pos="-0.031147 -0.00635 0" quat="0.707107 0 0.707107 0" type="cylinder" group="3" />
-                                                    <geom name="cylinder005_collider_cylinder" class="world_default" size="0.0029 0.015799" pos="-0.029953 0.00635 0" quat="0.707107 0 0.707107 0" type="cylinder" group="3" />
-                                                    <geom name="ferula_predeterminado005_collider_cylinder" class="world_default" size="0.00125 0.007" pos="0.00465 -0.00635 0" quat="0.707107 0 0.707107 0" type="cylinder" group="3" />
-                                                    <geom name="ferula_predeterminado003_collider_cylinder" class="world_default" size="0.00125 0.007" pos="0.00465 0.00635 0" quat="0.707107 0 0.707107 0" type="cylinder" group="3" />
-                                                    <geom name="side_box_collision" class="world_default" size="0.002125 0.00081 0.0005" pos="0.00146 -0.00632 0.0042" type="box" group="3" />
-                                                    <geom name="side_box_collision_2" class="world_default" size="0.002125 0.00081 0.0005" pos="0.00146 0.00632 0.0042" type="box" group="3" />
-                                                    <geom name="sc_plug_visual" class="world_default" type="mesh" contype="0" conaffinity="0" material="material_64e61b65f045552ba26a6ad52be1054f951feb31fe90869f7d202e8045dc22e6_sc_plug_visual_merged_0" mesh="64e61b65f045552ba26a6ad52be1054f951feb31fe90869f7d202e8045dc22e6_sc_plug_visual_merged_0" />
-                                                    <plugin instance="composite" />
-                                                    <body name="sc_tip_link" pos="0.01165 -3.5659e-08 1.72361e-07" quat="0.499998 -0.5 0.500001 -0.5">
-                                                      <inertial pos="0 0 0" mass="0.001" diaginertia="1e-06 1e-06 1e-06" />
-                                                    </body>
-                                                  </body>
-                                                </body>
-                                              </body>
-                                            </body>
-                                          </body>
-                                        </body>
-                                      </body>
-                                    </body>
-                                  </body>
-                                </body>
-                              </body>
-                            </body>
-                          </body>
-                        </body>
-                      </body>
-                    </body>
-                  </body>
-                </body>
-              </body>
-            </body>
-          </body>
-        </body>
-        <body name="lc_plug_link" pos="-0.041 5.02752e-09 2.98166e-09" quat="0.707109 -1.79818e-08 5.68286e-08 0.707105">
-          <inertial pos="0 0.0197 0" quat="0 0.707107 0 0.707107" mass="0.01" diaginertia="1.06153e-07 9.96094e-08 8.49658e-09" />
-          <geom name="cylinder001_collider_cylinder.001" class="world_default" size="0.000625 0.001502" pos="0.003125 0.0197 0" quat="0.707107 0.707107 0 0" type="cylinder" group="3" />
-          <geom name="cylinder_collider_cylinder.001" class="world_default" size="0.000625 0.001502" pos="-0.003125 0.0197 0" quat="0.707107 0.707107 0 0" type="cylinder" group="3" />
-          <geom name="lc_plug_visual" class="world_default" type="mesh" contype="0" conaffinity="0" material="material_49bcaba7dbdb7d3142691518ed2731a8b4b7bed5e5dd55a10defd679994a8fb5_lc_plug_visual_merged_0" mesh="49bcaba7dbdb7d3142691518ed2731a8b4b7bed5e5dd55a10defd679994a8fb5_lc_plug_visual_merged_0" />
-          <body name="sfp_module_link" pos="5.84077e-09 0.0384 2.64054e-08" quat="1.60451e-08 1 -1.2485e-06 -1.38325e-06">
-            <inertial pos="0.00024115 0.00702224 0.000553372" quat="0.510037 0.497012 -0.483415 0.50907" mass="0.02" diaginertia="3.07513e-06 2.81054e-06 5.69919e-07" />
-            <geom name="port_collider_box.008" class="world_default" size="0.00071 0.000503 0.0064415" pos="-0.00571 0.018813 -0.003546" quat="0.707107 0.707107 0 0" type="box" group="3" />
-            <geom name="port_collider_box.009" class="world_default" size="0.00071 0.000503 0.0064415" pos="0.00571 0.018813 -0.003546" quat="0.707107 0.707107 0 0" type="box" group="3" />
-            <geom name="body_collider_box" class="world_default" size="0.006875 0.02365 0.0003945" pos="0 0.001 0.00383" type="box" group="3" />
-            <geom name="body_collider_box.001" class="world_default" size="0.006875 0.02365 8.9e-05" pos="0 0.001 -0.004138" type="box" group="3" />
-            <geom name="body_collider_box.002" class="world_default" size="0.000287 0.02365 0.004225" pos="-0.006588 0.001 0" type="box" group="3" />
-            <geom name="body_collider_box.003" class="world_default" size="0.0004055 0.02365 0.004225" pos="0.00647 0.001 0" type="box" group="3" />
-            <geom name="port_collider_box.010" class="world_default" size="0.00642 0.0038815 0.0058645" pos="0 0.01229 0.000119" quat="0.707107 0.707107 0 0" type="box" group="3" />
-            <geom name="port_collider_box002_collider_box" class="world_default" size="0.00642 0.0002045 0.0008005" pos="0 0.024453 -0.004254" quat="0.707107 0.707107 0 0" type="box" group="3" />
-            <geom name="port_collider_box.011" class="world_default" size="0.00125 0.000503 0.0064415" pos="0 0.018813 -0.003546" quat="0.707107 0.707107 0 0" type="box" group="3" />
-            <geom name="sfp_module_visual" class="world_default" type="mesh" contype="0" conaffinity="0" material="material_4e46908e7d54f1b9f4b24d75a3e64fbc26cc8ba53b13e641c435298d0fee7478_sfp_module_visual_Body.005" mesh="4e46908e7d54f1b9f4b24d75a3e64fbc26cc8ba53b13e641c435298d0fee7478_sfp_module_visual_Body.005" />
-            <geom name="sfp_module_visual_0" class="world_default" type="mesh" contype="0" conaffinity="0" material="material_4e46908e7d54f1b9f4b24d75a3e64fbc26cc8ba53b13e641c435298d0fee7478_sfp_module_visual_Body.005_1" mesh="4e46908e7d54f1b9f4b24d75a3e64fbc26cc8ba53b13e641c435298d0fee7478_sfp_module_visual_Body.005_1" />
-            <body name="sfp_tip_link" pos="4.1719e-09 -0.02365 5.80744e-09" quat="0.707105 0.707108 4.21739e-08 -4.24679e-08">
-              <inertial pos="0 0 0" mass="0.001" diaginertia="1e-06 1e-06 1e-06" />
-              <geom name="contact_collision" class="world_default" size="0.006875 0.0021125 0.0005" pos="0 0.0021125 -0.0005" type="box" group="3" />
-              <geom name="non_contact_collision" class="world_default" size="0.006875 0.0021125 0.0005" pos="0 -0.0021125 -0.0005" type="box" group="3" />
-            </body>
-          </body>
-        </body>
-      </body>
     </body>
     <body name="task_board_base_link" pos="0.15 -0.2 1.14" quat="4.63151e-05 -5.13589e-10 -1.29702e-09 1">
       <inertial pos="0.00298077 -0.00408654 0.000423077" quat="0.331065 0.606837 -0.300201 0.657285" mass="5.2" diaginertia="0.105451 0.105385 0.102065" />
@@ -409,8 +165,8 @@
         <geom name="cube_collider_box.004" class="world_default" size="0.002742 0.001524 0.00465" pos="-0.014683 0 0" type="box" group="3" />
         <geom name="cube_collider_box.005" class="world_default" size="0.002742 0.001524 0.00465" pos="0.014683 0 0" type="box" group="3" />
         <geom name="cube_collider_box.006" class="world_default" size="0.001746 0.013716 0.00465" type="box" group="3" />
-        <geom name="v1015120013_collider_box" class="world_default" size="0.006 0.005 0.0015" pos="0.0183 -0.003 0" quat="0.5 -0.5 0.5 0.5" type="box" group="3"  contype="0" conaffinity="0" />
-        <geom name="v1015120012_collider_box" class="world_default" size="0.006 0.005 0.0015" pos="-0.0183 -0.003 0" quat="0.5 -0.5 -0.5 -0.5" type="box" group="3"  contype="0" conaffinity="0" />
+        <geom name="v1015120013_collider_box" class="world_default" size="0.006 0.005 0.0015" pos="0.0183 -0.003 0" quat="0.5 -0.5 0.5 0.5" type="box" group="3" contype="0" conaffinity="0" />
+        <geom name="v1015120012_collider_box" class="world_default" size="0.006 0.005 0.0015" pos="-0.0183 -0.003 0" quat="0.5 -0.5 -0.5 -0.5" type="box" group="3" contype="0" conaffinity="0" />
         <geom name="iso 4762 - m2 x 6013_collider_cylinder" class="world_default" size="0.0019 0.004" pos="0.0153 -0.0005 0" quat="0.693475 0.693475 0.138174 -0.138174" type="cylinder" group="3" />
         <geom name="iso 4762 - m2 x 6012_collider_cylinder" class="world_default" size="0.0019 0.004" pos="-0.0153 -0.0005 0" quat="0.693475 0.693475 0.138174 -0.138174" type="cylinder" group="3" />
         <geom name="contact_collision_0" class="world_default" size="0.0125 0.001473 0.0045" pos="0 -0.0034 0" quat="1.73205e-07 -1 0 0" type="box" group="3" />
@@ -424,13 +180,13 @@
       </body>
       <body name="nic_card_mount_0::nic_card_mount_link" pos="-0.081418 -0.1745 0.012">
         <inertial pos="0 0 0" mass="1" diaginertia="1 1 1" />
-        <geom name="v1015085006_collider_box" class="world_default" size="0.0025035 0.036998 0.0775" pos="0.006002 -0.025497 0.0875" quat="0.707107 0 0 0.707107" type="box" group="3"  contype="0" conaffinity="0" />
-        <geom name="v1015085006_collider_box.001" class="world_default" size="0.0125 0.01075 0.007" pos="-0.0555 -0.0155 0.172" quat="0.707107 0 0 0.707107" type="box" group="3"  contype="0" conaffinity="0" />
-        <geom name="v1015085006_collider_box.002" class="world_default" size="0.01375 0.002532 0.0515" pos="0.038535 -0.01425 0.1155" quat="0.707107 0 0 0.707107" type="box" group="3"  contype="0" conaffinity="0" />
-        <geom name="v1015085006_collider_box.003" class="world_default" size="0.010003 0.044894 0.0075" pos="-0.001997 -0.017997 0.0075" quat="0.707107 0 0 0.707107" type="box" group="3"  contype="0" conaffinity="0" />
-        <geom name="v1015085006_collider_box004_collider_box" class="world_default" size="0.0025005 0.02575 0.0075" pos="-0.042132 -0.025499 0.151803" quat="0.653335 0.270468 0.270468 0.653335" type="box" group="3"  contype="0" conaffinity="0" />
-        <geom name="v1015085006_collider_box.005" class="world_default" size="0.008 0.01 0.0075" pos="-0.043 -0.0198 0.1665" quat="0.65401 0.268834 0.268834 0.654009" type="box" group="3"  contype="0" conaffinity="0" />
-        <geom name="v1015085011_collider_box" class="world_default" size="0.0078345 0.031 0.0025" pos="3e-06 -0.004871 0.0025" quat="0.707107 0 0 0.707107" type="box" group="3"  contype="0" conaffinity="0" />
+        <geom name="v1015085006_collider_box" class="world_default" size="0.0025035 0.036998 0.0775" pos="0.006002 -0.025497 0.0875" quat="0.707107 0 0 0.707107" type="box" group="3" contype="0" conaffinity="0" />
+        <geom name="v1015085006_collider_box.001" class="world_default" size="0.0125 0.01075 0.007" pos="-0.0555 -0.0155 0.172" quat="0.707107 0 0 0.707107" type="box" group="3" contype="0" conaffinity="0" />
+        <geom name="v1015085006_collider_box.002" class="world_default" size="0.01375 0.002532 0.0515" pos="0.038535 -0.01425 0.1155" quat="0.707107 0 0 0.707107" type="box" group="3" contype="0" conaffinity="0" />
+        <geom name="v1015085006_collider_box.003" class="world_default" size="0.010003 0.044894 0.0075" pos="-0.001997 -0.017997 0.0075" quat="0.707107 0 0 0.707107" type="box" group="3" contype="0" conaffinity="0" />
+        <geom name="v1015085006_collider_box004_collider_box" class="world_default" size="0.0025005 0.02575 0.0075" pos="-0.042132 -0.025499 0.151803" quat="0.653335 0.270468 0.270468 0.653335" type="box" group="3" contype="0" conaffinity="0" />
+        <geom name="v1015085006_collider_box.005" class="world_default" size="0.008 0.01 0.0075" pos="-0.043 -0.0198 0.1665" quat="0.65401 0.268834 0.268834 0.654009" type="box" group="3" contype="0" conaffinity="0" />
+        <geom name="v1015085011_collider_box" class="world_default" size="0.0078345 0.031 0.0025" pos="3e-06 -0.004871 0.0025" quat="0.707107 0 0 0.707107" type="box" group="3" contype="0" conaffinity="0" />
         <geom name="nic_card_mount_visual" class="world_default" type="mesh" contype="0" conaffinity="0" material="material_11ca22ec5bc4bf3254ee393918b3b659d90ac573596f8ddff3835610b068bcee_nic_card_mount_visual_ISO_4762_-_M2_x_8.054" mesh="11ca22ec5bc4bf3254ee393918b3b659d90ac573596f8ddff3835610b068bcee_nic_card_mount_visual_ISO_4762_-_M2_x_8.054" />
         <geom name="nic_card_mount_visual_0" class="world_default" type="mesh" contype="0" conaffinity="0" material="material_11ca22ec5bc4bf3254ee393918b3b659d90ac573596f8ddff3835610b068bcee_nic_card_mount_visual_ISO_4762_-_M2_x_8.054_1" mesh="11ca22ec5bc4bf3254ee393918b3b659d90ac573596f8ddff3835610b068bcee_nic_card_mount_visual_ISO_4762_-_M2_x_8.054_1" />
         <body name="nic_card_link" pos="-0.002 -0.01785 0.0899" quat="0.707388 -0.706825 0 0">
@@ -494,7 +250,7 @@
     <exclude body1="sc_plug_link" body2="sc_port_0::sc_port_link" />
     <exclude name="task_board_base_link_sc_port_0::sc_port_link" body1="task_board_base_link" body2="sc_port_0::sc_port_link" />
     <exclude name="task_board_base_link_nic_card_mount_0::nic_card_mount_link" body1="task_board_base_link" body2="nic_card_mount_0::nic_card_mount_link" />
-    <!-- Cable self-collision exclusions (adjacent segments) -->
+    
     <exclude body1="cable_connection_0" body2="link_1" />
     <exclude body1="link_1" body2="link_2" />
     <exclude body1="link_2" body2="link_3" />
@@ -519,6 +275,6 @@
   </contact>
 
   <equality>
-    <weld body1="ati/tool_link" body2="lc_plug_link" relpose="-0.000711 0.001759 0.168213 0.577301 0.816105 -0.021418 -0.015395" solref="0.1 1" active="false" solimp="0.99 0.999 0.001" />
-  </equality>
+    
+    </equality>
 </mujoco>
