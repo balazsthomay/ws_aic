@@ -10,12 +10,10 @@
   <default>
     <default class="world_default" />
     <default class="cable_default">
-      <joint damping="5.0" armature="0.1" />
+      <joint damping="2.0" armature="0.1" />
     </default>
   </default>
 
-  <!-- Cable elasticity plugin disabled: generates unstable forces at startup.
-       Re-enable once cable initial state is properly configured.
   <extension>
     <plugin plugin="mujoco.elasticity.cable">
       <instance name="composite">
@@ -24,7 +22,6 @@
       </instance>
     </plugin>
   </extension>
-  -->
 
   <asset>
     <texture type="2d" colorspace="linear" name="texture_3cfd66d2e9d880eae3d6e7923ec9058d874bf1526844466939fc4924d98ff9b9_floor_visual_Plane" file="meshes/floor_visual__Plane.png" />
@@ -129,13 +126,13 @@
       <!-- freejoint removed: cable end is fixed to world (attached to task board) -->
       <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
       <geom name="base_vis" class="world_default" size="0.002" contype="0" conaffinity="0" />
-      <!-- <plugin instance="composite" /> -->
+      <plugin instance="composite" />
       <body name="cable_connection_0" pos="-2.48032e-08 2.17152e-08 -1.45797e-07" quat="0.922729 -0.0944968 -0.331446 0.172583">
         <inertial pos="0 0 0" mass="0.01" diaginertia="1e-6 1e-6 1e-6" />
-        <joint name="joint_connection_end_0" class="cable_default" pos="0 0 0" type="ball" damping="10.0" armature="0.1" />
+        <joint name="joint_connection_end_0" class="cable_default" pos="0 0 0" type="ball" damping="5.0" armature="0.1" />
         <geom name="visual_0_0" class="world_default" size="0.001 0.00180278" pos="-0.00180278 0.002 0" quat="0.676768 0.204909 0.676764 -0.204908" type="cylinder" contype="0" conaffinity="0" />
         <geom name="visual_1_0" class="world_default" size="0.001 0.00180278" pos="-0.00180278 -0.002 0" quat="0.676768 -0.204909 0.676764 0.204908" type="cylinder" contype="0" conaffinity="0" />
-        <!-- <plugin instance="composite" /> -->
+        <plugin instance="composite" />
         <body name="link_1" pos="0.00170632 -0.00556858 -0.0232827" quat="-0.0670116 -0.276934 -0.95308 0.102252">
           <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
           <joint name="joint_end_0" pos="0 0 -0.024" type="ball" />
@@ -143,7 +140,7 @@
           <geom name="sphere_1_collision" size="0.002" pos="0 0 0.024" group="3" />
           <geom name="link_1_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
           <geom name="sphere_1_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-          <!-- <plugin instance="composite" /> -->
+          <plugin instance="composite" />
           <body name="link_2" pos="0.0064563 -0.00759576 0.045832" quat="0.976992 0.159419 0.140563 -0.0177353">
             <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
             <joint name="joint_1" pos="0 0 -0.024" type="ball" />
@@ -151,7 +148,7 @@
             <geom name="sphere_2_collision" size="0.002" pos="0 0 0.024" group="3" />
             <geom name="link_2_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
             <geom name="sphere_2_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-            <!-- <plugin instance="composite" /> -->
+            <plugin instance="composite" />
             <body name="link_3" pos="0.000666041 -0.00668751 0.0470402" quat="0.98975 0.140425 0.0168223 -0.0198334">
               <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
               <joint name="joint_2" pos="0 0 -0.024" type="ball" />
@@ -159,7 +156,7 @@
               <geom name="sphere_3_collision" size="0.002" pos="0 0 0.024" group="3" />
               <geom name="link_3_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
               <geom name="sphere_3_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-              <!-- <plugin instance="composite" /> -->
+              <plugin instance="composite" />
               <body name="link_4" pos="-0.00201756 -0.0046759 0.0474536" quat="0.994004 0.0989623 -0.0399132 -0.0238771">
                 <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
                 <joint name="joint_3" pos="0 0 -0.024" type="ball" />
@@ -167,7 +164,7 @@
                 <geom name="sphere_4_collision" size="0.002" pos="0 0 0.024" group="3" />
                 <geom name="link_4_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
                 <geom name="sphere_4_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                <!-- <plugin instance="composite" /> -->
+                <plugin instance="composite" />
                 <body name="link_5" pos="-0.00359934 -0.0031378 0.0475207" quat="0.994211 0.0686286 -0.0727025 -0.0393501">
                   <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
                   <joint name="joint_4" pos="0 0 -0.024" type="ball" />
@@ -175,7 +172,7 @@
                   <geom name="sphere_5_collision" size="0.002" pos="0 0 0.024" group="3" />
                   <geom name="link_5_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
                   <geom name="sphere_5_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                  <!-- <plugin instance="composite" /> -->
+                  <plugin instance="composite" />
                   <body name="link_6" pos="-0.00400601 -0.00179596 0.0475953" quat="0.993829 0.0427394 -0.0813241 -0.0621514">
                     <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
                     <joint name="joint_5" pos="0 0 -0.024" type="ball" />
@@ -183,7 +180,7 @@
                     <geom name="sphere_6_collision" size="0.002" pos="0 0 0.024" group="3" />
                     <geom name="link_6_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
                     <geom name="sphere_6_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                    <!-- <plugin instance="composite" /> -->
+                    <plugin instance="composite" />
                     <body name="link_7" pos="-0.00359567 -0.000736965 0.0477182" quat="0.993406 0.0217587 -0.0735419 -0.0852205">
                       <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
                       <joint name="joint_6" pos="0 0 -0.024" type="ball" />
@@ -191,7 +188,7 @@
                       <geom name="sphere_7_collision" size="0.002" pos="0 0 0.024" group="3" />
                       <geom name="link_7_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
                       <geom name="sphere_7_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                      <!-- <plugin instance="composite" /> -->
+                      <plugin instance="composite" />
                       <body name="link_8" pos="-0.00255335 0.000119986 0.0478642" quat="0.993512 0.00286058 -0.0532556 -0.100445">
                         <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
                         <joint name="joint_7" pos="0 0 -0.024" type="ball" />
@@ -199,7 +196,7 @@
                         <geom name="sphere_8_collision" size="0.002" pos="0 0 0.024" group="3" />
                         <geom name="link_8_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
                         <geom name="sphere_8_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                        <!-- <plugin instance="composite" /> -->
+                        <plugin instance="composite" />
                         <body name="link_9" pos="-0.00133737 0.000859059 0.0479485" quat="0.994153 -0.0149483 -0.0295699 -0.102776">
                           <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
                           <joint name="joint_8" pos="0 0 -0.024" type="ball" />
@@ -207,7 +204,7 @@
                           <geom name="sphere_9_collision" size="0.002" pos="0 0 0.024" group="3" />
                           <geom name="link_9_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
                           <geom name="sphere_9_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                          <!-- <plugin instance="composite" /> -->
+                          <plugin instance="composite" />
                           <body name="link_10" pos="-0.000441179 0.00156015 0.0479454" quat="0.994979 -0.0314896 -0.0122296 -0.0942127">
                             <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
                             <joint name="joint_9" pos="0 0 -0.024" type="ball" />
@@ -215,7 +212,7 @@
                             <geom name="sphere_10_collision" size="0.002" pos="0 0 0.024" group="3" />
                             <geom name="link_10_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
                             <geom name="sphere_10_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                            <!-- <plugin instance="composite" /> -->
+                            <plugin instance="composite" />
                             <body name="link_11" pos="0.00114853 0.00243771 0.0478493" quat="0.994284 -0.0528353 0.0192331 -0.0907645">
                               <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
                               <joint name="joint_10" pos="0 0 -0.024" type="ball" />
@@ -223,7 +220,7 @@
                               <geom name="sphere_11_collision" size="0.002" pos="0 0 0.024" group="3" />
                               <geom name="link_11_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
                               <geom name="sphere_11_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                              <!-- <plugin instance="composite" /> -->
+                              <plugin instance="composite" />
                               <body name="link_12" pos="0.00319193 0.00397127 0.0474547" quat="0.991985 -0.0875655 0.0610639 -0.0676033">
                                 <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
                                 <joint name="joint_11" pos="0 0 -0.024" type="ball" />
@@ -231,7 +228,7 @@
                                 <geom name="sphere_12_collision" size="0.002" pos="0 0 0.024" group="3" />
                                 <geom name="link_12_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
                                 <geom name="sphere_12_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                                <!-- <plugin instance="composite" /> -->
+                                <plugin instance="composite" />
                                 <body name="link_13" pos="0.00477094 0.00576188 0.0468049" quat="0.986645 -0.125566 0.0955868 -0.040351">
                                   <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
                                   <joint name="joint_12" pos="0 0 -0.024" type="ball" />
@@ -239,7 +236,7 @@
                                   <geom name="sphere_13_collision" size="0.002" pos="0 0 0.024" group="3" />
                                   <geom name="link_13_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
                                   <geom name="sphere_13_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                                  <!-- <plugin instance="composite" /> -->
+                                  <plugin instance="composite" />
                                   <body name="link_14" pos="0.005839 0.00733455 0.0460941" quat="0.979848 -0.157594 0.122011 -0.0132488">
                                     <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
                                     <joint name="joint_13" pos="0 0 -0.024" type="ball" />
@@ -247,7 +244,7 @@
                                     <geom name="sphere_14_collision" size="0.002" pos="0 0 0.024" group="3" />
                                     <geom name="link_14_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
                                     <geom name="sphere_14_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                                    <!-- <plugin instance="composite" /> -->
+                                    <plugin instance="composite" />
                                     <body name="link_15" pos="0.00648458 0.00806215 0.0456562" quat="0.975213 -0.170653 0.140422 0.0109129">
                                       <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
                                       <joint name="joint_14" pos="0 0 -0.024" type="ball" />
@@ -255,7 +252,7 @@
                                       <geom name="sphere_15_collision" size="0.002" pos="0 0 0.024" group="3" />
                                       <geom name="link_15_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
                                       <geom name="sphere_15_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                                      <!-- <plugin instance="composite" /> -->
+                                      <plugin instance="composite" />
                                       <body name="link_16" pos="0.00662934 0.0075781 0.0457874" quat="0.976219 -0.157324 0.146215 0.0294472">
                                         <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
                                         <joint name="joint_15" pos="0 0 -0.024" type="ball" />
@@ -263,7 +260,7 @@
                                         <geom name="sphere_16_collision" size="0.002" pos="0 0 0.024" group="3" />
                                         <geom name="link_16_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
                                         <geom name="sphere_16_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                                        <!-- <plugin instance="composite" /> -->
+                                        <plugin instance="composite" />
                                         <body name="link_17" pos="0.00635258 0.00595334 0.0463669" quat="0.981986 -0.120488 0.139748 0.0407034">
                                           <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
                                           <joint name="joint_16" pos="0 0 -0.024" type="ball" />
@@ -271,7 +268,7 @@
                                           <geom name="sphere_17_collision" size="0.002" pos="0 0 0.024" group="3" />
                                           <geom name="link_17_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
                                           <geom name="sphere_17_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                                          <!-- <plugin instance="composite" /> -->
+                                          <plugin instance="composite" />
                                           <body name="link_18" pos="0.00575653 0.003482 0.047038" quat="0.988962 -0.06784 0.124269 0.0436973">
                                             <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
                                             <joint name="joint_17" pos="0 0 -0.024" type="ball" />
@@ -279,7 +276,7 @@
                                             <geom name="sphere_18_collision" size="0.002" pos="0 0 0.024" group="3" />
                                             <geom name="link_18_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
                                             <geom name="sphere_18_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                                            <!-- <plugin instance="composite" /> -->
+                                            <plugin instance="composite" />
                                             <body name="link_19" pos="0.00550013 0.00141785 0.0473194" quat="0.992157 -0.0253624 0.116454 0.0376818">
                                               <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
                                               <joint name="joint_18" pos="0 0 -0.024" type="ball" />
@@ -287,7 +284,7 @@
                                               <geom name="sphere_19_collision" size="0.002" pos="0 0 0.024" group="3" />
                                               <geom name="link_19_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
                                               <geom name="sphere_19_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                                              <!-- <plugin instance="composite" /> -->
+                                              <plugin instance="composite" />
                                               <body name="link_20" pos="0.00534656 -0.00101358 0.0473769" quat="0.993097 0.0243171 0.111486 0.027151">
                                                 <inertial pos="0 0 0" mass="0.0025" diaginertia="1e-6 1e-6 1e-6" />
                                                 <joint name="joint_19" pos="0 0 -0.024" type="ball" />
@@ -295,15 +292,15 @@
                                                 <geom name="sphere_20_collision" size="0.002" pos="0 0 0.024" group="3" />
                                                 <geom name="link_20_vis" size="0.002 0.024" type="cylinder" contype="0" conaffinity="0" />
                                                 <geom name="sphere_20_vis" size="0.002" pos="0 0 0.024" contype="0" conaffinity="0" />
-                                                <!-- <plugin instance="composite" /> -->
+                                                <plugin instance="composite" />
                                                 <body name="cable_connection_1" pos="1.18118e-06 -3.36725e-07 0.0240001" quat="0.773544 0.0588014 -0.629752 -0.039807">
                                                   <inertial pos="0 0 0" mass="0.01" diaginertia="4e-4 4e-4 4e-4" />
-                                                  <joint name="joint_connection_end_1" class="cable_default" pos="0 0 0" type="ball" damping="10.0" armature="0.1" />
+                                                  <joint name="joint_connection_end_1" class="cable_default" pos="0 0 0" type="ball" />
                                                   <geom name="collision_0" class="world_default" size="0.001 0.00367636" pos="0.00367636 -0.00425 0" quat="0.673802 0.214463 0.673798 -0.214461" type="cylinder" group="3" />
                                                   <geom name="collision_1" class="world_default" size="0.001 0.00367636" pos="0.00367636 0.00425 0" quat="0.673802 -0.214463 0.673798 0.214461" type="cylinder" group="3" />
                                                   <geom name="visual_0" class="world_default" size="0.001 0.00367636" pos="0.00367636 -0.00425 0" quat="0.673802 0.214463 0.673798 -0.214461" type="cylinder" contype="0" conaffinity="0" />
                                                   <geom name="visual_1" class="world_default" size="0.001 0.00367636" pos="0.00367636 0.00425 0" quat="0.673802 -0.214463 0.673798 0.214461" type="cylinder" contype="0" conaffinity="0" />
-                                                  <!-- <plugin instance="composite" /> -->
+                                                  <plugin instance="composite" />
                                                   <body name="sc_plug_link" pos="0.0520001 -2.50452e-10 -3.85925e-08" quat="1 -9.69236e-08 -4.66151e-08 -3.51934e-09">
                                                     <inertial pos="-0.0113552 5.95326e-05 9.66547e-06" quat="0.000666424 0.706845 -0.000660251 0.707368" mass="0.04" diaginertia="8.92011e-06 7.22349e-06 2.15571e-06" />
                                                     <geom name="housing blue_predeterminado005_collider_box" class="world_default" size="0.006861 0.0045 0.00365" pos="0.002539 0.006344 4e-06" type="box" group="3" />
@@ -316,7 +313,7 @@
                                                     <geom name="side_box_collision" class="world_default" size="0.002125 0.00081 0.0005" pos="0.00146 -0.00632 0.0042" type="box" group="3" />
                                                     <geom name="side_box_collision_2" class="world_default" size="0.002125 0.00081 0.0005" pos="0.00146 0.00632 0.0042" type="box" group="3" />
                                                     <geom name="sc_plug_visual" class="world_default" type="mesh" contype="0" conaffinity="0" material="material_64e61b65f045552ba26a6ad52be1054f951feb31fe90869f7d202e8045dc22e6_sc_plug_visual_merged_0" mesh="64e61b65f045552ba26a6ad52be1054f951feb31fe90869f7d202e8045dc22e6_sc_plug_visual_merged_0" />
-                                                    <!-- <plugin instance="composite" /> -->
+                                                    <plugin instance="composite" />
                                                     <body name="sc_tip_link" pos="0.01165 -3.5659e-08 1.72361e-07" quat="0.499998 -0.5 0.500001 -0.5">
                                                       <inertial pos="0 0 0" mass="0.001" diaginertia="1e-06 1e-06 1e-06" />
                                                     </body>
@@ -497,12 +494,31 @@
     <exclude body1="sc_plug_link" body2="sc_port_0::sc_port_link" />
     <exclude name="task_board_base_link_sc_port_0::sc_port_link" body1="task_board_base_link" body2="sc_port_0::sc_port_link" />
     <exclude name="task_board_base_link_nic_card_mount_0::nic_card_mount_link" body1="task_board_base_link" body2="nic_card_mount_0::nic_card_mount_link" />
+    <!-- Cable self-collision exclusions (adjacent segments) -->
+    <exclude body1="cable_connection_0" body2="link_1" />
+    <exclude body1="link_1" body2="link_2" />
+    <exclude body1="link_2" body2="link_3" />
+    <exclude body1="link_3" body2="link_4" />
+    <exclude body1="link_4" body2="link_5" />
+    <exclude body1="link_5" body2="link_6" />
+    <exclude body1="link_6" body2="link_7" />
+    <exclude body1="link_7" body2="link_8" />
+    <exclude body1="link_8" body2="link_9" />
+    <exclude body1="link_9" body2="link_10" />
+    <exclude body1="link_10" body2="link_11" />
+    <exclude body1="link_11" body2="link_12" />
+    <exclude body1="link_12" body2="link_13" />
+    <exclude body1="link_13" body2="link_14" />
+    <exclude body1="link_14" body2="link_15" />
+    <exclude body1="link_15" body2="link_16" />
+    <exclude body1="link_16" body2="link_17" />
+    <exclude body1="link_17" body2="link_18" />
+    <exclude body1="link_18" body2="link_19" />
+    <exclude body1="link_19" body2="link_20" />
+    <exclude body1="link_20" body2="cable_connection_1" />
   </contact>
 
-  <!-- Weld disabled: creates kinematic loop with cable chain.
-       Re-enable when cable physics is properly configured.
   <equality>
-    <weld body1="ati/tool_link" body2="lc_plug_link" relpose="-0.000711 0.001759 0.168213 0.577301 0.816105 -0.021418 -0.015395" solref="0.002 1" solimp="0.99 0.999 0.001" />
+    <weld body1="ati/tool_link" body2="lc_plug_link" relpose="-0.000711 0.001759 0.168213 0.577301 0.816105 -0.021418 -0.015395" solref="0.1 1" active="false" solimp="0.99 0.999 0.001" />
   </equality>
-  -->
 </mujoco>
