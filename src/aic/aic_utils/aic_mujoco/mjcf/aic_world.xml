@@ -248,6 +248,9 @@
   <contact>
     <exclude body1="cable_end_0" body2="link_1" />
     <exclude body1="sc_plug_link" body2="sc_port_0::sc_port_link" />
+    <exclude body1="sfp_module_link" body2="nic_card_link" />
+    <exclude body1="sfp_tip_link" body2="nic_card_link" />
+    <exclude body1="lc_plug_link" body2="nic_card_link" />
     <exclude name="task_board_base_link_sc_port_0::sc_port_link" body1="task_board_base_link" body2="sc_port_0::sc_port_link" />
     <exclude name="task_board_base_link_nic_card_mount_0::nic_card_mount_link" body1="task_board_base_link" body2="nic_card_mount_0::nic_card_mount_link" />
     
