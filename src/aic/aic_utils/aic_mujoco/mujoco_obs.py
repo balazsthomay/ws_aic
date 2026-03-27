@@ -30,68 +30,124 @@ JOINT_NAMES = [
     "wrist_1_joint", "wrist_2_joint", "wrist_3_joint",
 ]
 
-# Distinct colors for key scene components (applied at model load)
-_BODY_COLORS = {
-    "nic_card_link": [0.1, 0.6, 0.2, 1.0],           # green PCB
-    "sfp_module_link": [0.2, 0.3, 0.9, 1.0],          # blue plug
-    "sfp_tip_link": [0.2, 0.3, 0.9, 1.0],
-    "lc_plug_link": [0.6, 0.2, 0.7, 1.0],             # purple connector
-    "task_board_base_link": [0.4, 0.35, 0.3, 1.0],    # dark wood
-    "sc_port_0::sc_port_link": [0.8, 0.1, 0.1, 1.0],  # red port
-    "enclosure_link": [0.2, 0.2, 0.22, 1.0],          # dark enclosure
-    "tabletop": [0.2, 0.2, 0.22, 1.0],
-}
-
 
 def enhance_scene_visibility(model: "mujoco.MjModel") -> None:
-    """Strip materials/textures and apply distinct colors for camera visibility.
+    """Assign distinct bright colors to each body for camera visibility.
 
-    MuJoCo rendering precedence: material > geom_rgba.
-    We remove all material references so geom_rgba controls color directly.
+    The original visual meshes (group 3) are dark/black. Instead we show
+    collision primitives (group 0) with per-body semantic colors, giving
+    cameras the contrast needed for a learned policy.
     """
-    # Step 1: Remove material reference from ALL geoms, set warm gray default
-    # Use slightly warm gray so backgrounds have color (not R=G=B gray)
+    # Strip all material references so geom_rgba takes effect
     for i in range(model.ngeom):
         model.geom_matid[i] = -1
-        if model.geom_rgba[i, 3] > 0:
-            model.geom_rgba[i] = [0.30, 0.28, 0.26, 1.0]  # warm brown-gray
 
-    # Step 2: Color specific bodies
-    for body_name, rgba in _BODY_COLORS.items():
-        bid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, body_name)
-        if bid < 0:
-            continue
-        for i in range(model.ngeom):
-            if model.geom_bodyid[i] == bid:
-                model.geom_rgba[i] = rgba
+    # Assign a unique hue per body (semantic coloring)
+    rng = np.random.RandomState(0)  # deterministic colors
+    body_colors = {}
+    for i in range(model.nbody):
+        # Generate a bright, saturated color via HSV
+        hue = (i * 0.618033988) % 1.0  # golden ratio spacing
+        sat = 0.6 + rng.random() * 0.3
+        val = 0.5 + rng.random() * 0.3
+        # HSV to RGB
+        h = hue * 6.0
+        c = val * sat
+        x = c * (1 - abs(h % 2 - 1))
+        m = val - c
+        if h < 1:
+            r, g, b = c, x, 0
+        elif h < 2:
+            r, g, b = x, c, 0
+        elif h < 3:
+            r, g, b = 0, c, x
+        elif h < 4:
+            r, g, b = 0, x, c
+        elif h < 5:
+            r, g, b = x, 0, c
+        else:
+            r, g, b = c, 0, x
+        body_colors[i] = [r + m, g + m, b + m, 1.0]
 
-    # Step 3: Floor → dark blue-gray
-    for i in range(model.ngeom):
-        if "floor" in model.geom(i).name.lower():
-            model.geom_rgba[i] = [0.12, 0.12, 0.18, 1.0]
+    # Override key bodies with semantically meaningful colors
+    _KEY_COLORS = {
+        "nic_card_link": [0.1, 0.8, 0.2, 1.0],          # vivid green PCB
+        "sfp_module_link": [0.2, 0.3, 1.0, 1.0],        # bright blue plug
+        "sfp_tip_link": [0.2, 0.3, 1.0, 1.0],
+        "lc_plug_link": [0.8, 0.2, 0.9, 1.0],           # vivid purple
+        "task_board_base_link": [0.7, 0.5, 0.3, 1.0],   # warm tan
+        "sc_port_0::sc_port_link": [1.0, 0.15, 0.1, 1.0],  # vivid red
+        "enclosure_link": [0.25, 0.28, 0.35, 1.0],      # dark blue-steel
+        "tabletop": [0.45, 0.35, 0.25, 1.0],            # medium wood
+        "floor_link": [0.15, 0.18, 0.22, 1.0],          # dark blue floor
+    }
+    for name, rgba in _KEY_COLORS.items():
+        bid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, name)
+        if bid >= 0:
+            body_colors[bid] = rgba
 
-    # Step 4: Cable links → orange
-    for i in range(model.ngeom):
-        bname = model.body(model.geom_bodyid[i]).name
+    # Cable → orange
+    for i in range(model.nbody):
+        bname = model.body(i).name
         if bname.startswith("link_") or bname.startswith("cable_"):
-            model.geom_rgba[i] = [0.9, 0.4, 0.1, 1.0]
+            body_colors[i] = [0.9, 0.45, 0.1, 1.0]
 
-    # Step 5: Robot links → light blue-gray
-    robot_bodies = {"shoulder_link", "upper_arm_link", "forearm_link",
-                    "wrist_1_link", "wrist_2_link", "wrist_3_link"}
+    # Robot → light blue-gray
+    for name in ["shoulder_link", "upper_arm_link", "forearm_link",
+                 "wrist_1_link", "wrist_2_link", "wrist_3_link"]:
+        bid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, name)
+        if bid >= 0:
+            body_colors[bid] = [0.6, 0.65, 0.75, 1.0]
+
+    # Apply colors to all geoms
+    for i in range(model.ngeom):
+        bid = model.geom_bodyid[i]
+        if bid in body_colors and model.geom_rgba[i, 3] > 0:
+            model.geom_rgba[i] = body_colors[bid]
+
+    # Hide robot geoms that block camera view (wrist, tool, gripper)
+    _HIDE_BODIES = {
+        "wrist_3_link", "ati/tool_link",
+        "center_camera/sensor_link", "center_camera/optical",
+        "left_camera/sensor_link", "left_camera/optical",
+        "right_camera/sensor_link", "right_camera/optical",
+        "gripper/hande_base_link",
+        "gripper/hande_finger_link_l", "gripper/hande_finger_link_r",
+    }
     for i in range(model.ngeom):
         bname = model.body(model.geom_bodyid[i]).name
-        if bname in robot_bodies:
-            model.geom_rgba[i] = [0.55, 0.58, 0.65, 1.0]
+        if bname in _HIDE_BODIES:
+            model.geom_rgba[i, 3] = 0.0  # fully transparent
 
-    # Step 6: Tune lighting — reduce all lights to avoid blowout
-    model.vis.headlight.ambient[:] = [0.05, 0.05, 0.05]
-    model.vis.headlight.diffuse[:] = [0.15, 0.15, 0.15]
-    model.vis.headlight.specular[:] = [0.1, 0.1, 0.1]
+    # Make enclosure geoms vary in shade to break uniformity
+    enc_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "enclosure_link")
+    if enc_id >= 0:
+        rng2 = np.random.RandomState(7)
+        for i in range(model.ngeom):
+            if model.geom_bodyid[i] == enc_id:
+                base = np.array([0.25, 0.28, 0.35])
+                jitter = rng2.uniform(-0.08, 0.08, 3)
+                model.geom_rgba[i, :3] = np.clip(base + jitter, 0.1, 0.5)
+
+    # Tabletop → alternating warm/cool patches
+    tab_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "tabletop")
+    if tab_id >= 0:
+        idx = 0
+        for i in range(model.ngeom):
+            if model.geom_bodyid[i] == tab_id:
+                if idx % 2 == 0:
+                    model.geom_rgba[i] = [0.45, 0.38, 0.3, 1.0]
+                else:
+                    model.geom_rgba[i] = [0.3, 0.35, 0.42, 1.0]
+                idx += 1
+
+    # Balanced lighting
+    model.vis.headlight.ambient[:] = [0.15, 0.15, 0.15]
+    model.vis.headlight.diffuse[:] = [0.35, 0.35, 0.35]
+    model.vis.headlight.specular[:] = [0.15, 0.15, 0.15]
     for i in range(model.nlight):
-        model.light_diffuse[i] = np.clip(model.light_diffuse[i] * 0.3, 0, 1)
-        model.light_specular[i] = np.clip(model.light_specular[i] * 0.3, 0, 1)
-        model.light_ambient[i] = np.clip(model.light_ambient[i] * 0.2, 0, 1)
+        model.light_diffuse[i] = np.clip(model.light_diffuse[i] * 0.25, 0, 1)
+        model.light_specular[i] = np.clip(model.light_specular[i] * 0.2, 0, 1)
 
 
 @dataclass
