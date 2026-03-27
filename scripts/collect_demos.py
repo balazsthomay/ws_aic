@@ -11,10 +11,14 @@ Usage:
 
 import argparse
 import math
+import sys
 from pathlib import Path
 
 import mujoco
 import numpy as np
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src/aic/aic_utils/aic_mujoco"))
+from mujoco_obs import MuJoCoObserver
 
 SCENE = Path(__file__).resolve().parent.parent / "src/aic/aic_utils/aic_mujoco/mjcf/scene.xml"
 
@@ -168,7 +172,7 @@ def randomize_board(m, idx, rng, nominal_pos, nominal_quat):
     return {"dx": dx, "dy": dy, "dyaw": dyaw}
 
 
-def run_episode(m, d, idx, d_ik, approach, descent):
+def run_episode(m, d, idx, d_ik, approach, descent, observer=None):
     """Simulate one insertion episode, return trajectory data."""
     mujoco.mj_resetDataKeyframe(m, d, 0)
     dt = m.opt.timestep
@@ -177,6 +181,7 @@ def run_episode(m, d, idx, d_ik, approach, descent):
 
     states = []
     actions = []
+    images = {name: [] for name in ["left_camera", "center_camera", "right_camera"]}
 
     for s in range(int(total_time / dt)):
         t = s * dt
@@ -205,6 +210,11 @@ def run_episode(m, d, idx, d_ik, approach, descent):
             states.append(state)
             actions.append(ctrl.copy())
 
+            if observer is not None:
+                obs = observer.get_observation()
+                for name in images:
+                    images[name].append(obs.images[name])
+
     # Final check
     tip = d.xpos[idx["tip_id"]]
     port = d.xpos[idx["port_id"]]
@@ -212,7 +222,13 @@ def run_episode(m, d, idx, d_ik, approach, descent):
     z_rel = (tip[2] - port[2]) * 1000
     success = xy_err < 0.005 and z_rel < -5
 
-    return np.array(states), np.array(actions), success, xy_err, z_rel
+    # Stack images
+    images_np = {}
+    if observer is not None:
+        for name in images:
+            images_np[name] = np.array(images[name], dtype=np.uint8)
+
+    return np.array(states), np.array(actions), images_np, success, xy_err, z_rel
 
 
 def main():
@@ -220,6 +236,7 @@ def main():
     parser.add_argument("--episodes", type=int, default=100)
     parser.add_argument("--out", type=str, default="data/demos.npz")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--images", action="store_true", help="Save camera images (slower, larger files)")
     args = parser.parse_args()
 
     out_path = Path(args.out)
@@ -234,12 +251,18 @@ def main():
     idx = setup_indices(m)
     rng = np.random.default_rng(args.seed)
 
+    observer = None
+    if args.images:
+        observer = MuJoCoObserver(m, d, image_scale=0.25)
+        print("Image recording enabled (0.25x scale)")
+
     # Save nominal board pose
     nominal_pos = m.body_pos[idx["board_id"]].copy()
     nominal_quat = m.body_quat[idx["board_id"]].copy()
 
     all_states = []
     all_actions = []
+    all_images = {name: [] for name in ["left_camera", "center_camera", "right_camera"]}
     episode_lengths = []
     episode_success = []
     episode_params = []
@@ -258,12 +281,15 @@ def main():
         approach, descent = build_trajectory(m, d, idx, d_ik)
 
         # Run episode
-        states, actions, success, xy_err, z_rel = run_episode(
-            m, d, idx, d_ik, approach, descent
+        states, actions, images, success, xy_err, z_rel = run_episode(
+            m, d, idx, d_ik, approach, descent, observer
         )
 
         all_states.append(states)
         all_actions.append(actions)
+        if args.images:
+            for name in all_images:
+                all_images[name].append(images[name])
         episode_lengths.append(len(states))
         episode_success.append(success)
         episode_params.append([params["dx"], params["dy"], params["dyaw"]])
@@ -298,8 +324,7 @@ def main():
         states_padded[i, :L] = all_states[i]
         actions_padded[i, :L] = all_actions[i]
 
-    np.savez_compressed(
-        out_path,
+    save_dict = dict(
         states=states_padded,
         actions=actions_padded,
         episode_lengths=np.array(episode_lengths),
@@ -320,9 +345,27 @@ def main():
         ],
     )
 
+    if args.images:
+        for name in all_images:
+            # Stack: (n_eps, max_len, H, W, 3)
+            imgs = all_images[name]
+            H, W = imgs[0].shape[1], imgs[0].shape[2]
+            padded = np.zeros((n_eps, max_len, H, W, 3), dtype=np.uint8)
+            for i in range(n_eps):
+                L = episode_lengths[i]
+                padded[i, :L] = imgs[i]
+            save_dict[f"images_{name}"] = padded
+
+    np.savez_compressed(out_path, **save_dict)
+
+    if observer is not None:
+        observer.close()
+
     size_mb = out_path.stat().st_size / 1e6
     print(f"Saved {n_eps} episodes ({max_len} steps each) to {out_path} ({size_mb:.1f}MB)")
     print(f"State dim: {state_dim}, Action dim: {action_dim}")
+    if args.images:
+        print(f"Images: 3 cameras at {H}x{W}")
 
 
 if __name__ == "__main__":
