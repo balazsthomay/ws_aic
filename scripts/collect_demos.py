@@ -199,6 +199,7 @@ def run_episode(m, d, idx, d_ik, approach, descent, observer=None):
             tcp_quat = np.zeros(4)
             mujoco.mju_mat2Quat(tcp_quat, tcp_mat.flatten())
 
+            progress = t / total_time  # normalized time [0, 1]
             state = np.concatenate([
                 d.qpos[idx["qids"]].copy(),      # joint positions (6)
                 d.qvel[idx["dids"]].copy(),       # joint velocities (6)
@@ -206,6 +207,7 @@ def run_episode(m, d, idx, d_ik, approach, descent, observer=None):
                 tcp_quat,                          # TCP quaternion (4)
                 d.xpos[idx["tip_id"]].copy(),     # tip position (3)
                 d.xpos[idx["port_id"]].copy(),    # port position (3)
+                [progress],                        # normalized time (1)
             ])
             states.append(state)
             actions.append(ctrl.copy())
@@ -339,6 +341,7 @@ def main():
             "tcp_qw", "tcp_qx", "tcp_qy", "tcp_qz",
             "tip_x", "tip_y", "tip_z",
             "port_x", "port_y", "port_z",
+            "progress",
         ],
         action_labels=[
             "ctrl_0", "ctrl_1", "ctrl_2", "ctrl_3", "ctrl_4", "ctrl_5",
