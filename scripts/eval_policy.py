@@ -283,7 +283,6 @@ def main():
 
         def controller(model_mj, data):
             nonlocal ctrl, step_count, action_chunk, chunk_idx
-            ctrl_target = ctrl
 
             if step_count % control_interval == 0 and data.time < MAX_TIME:
                 progress = data.time / MAX_TIME
@@ -293,18 +292,14 @@ def main():
                 with torch.no_grad():
                     if args.arch == "mlp":
                         action_norm = model(state_norm).squeeze(0)
-                        action = (action_norm * a_std + a_mean).numpy()
+                        ctrl = (action_norm * a_std + a_mean).numpy()
                     elif args.arch == "diffusion":
                         if action_chunk is None or chunk_idx >= model.chunk_size:
                             action_chunk = model.sample(state_norm).squeeze(0)
                             chunk_idx = 0
                         action_norm = action_chunk[chunk_idx]
-                        action = (action_norm * a_std + a_mean).numpy()
+                        ctrl = (action_norm * a_std + a_mean).numpy()
                         chunk_idx += 1
-                ctrl_target = action
-
-            diff = ctrl_target - ctrl
-            ctrl = ctrl + np.clip(diff, -max_step, max_step)
 
             for i, ai in enumerate(idx["aids"]):
                 data.ctrl[ai] = ctrl[i]
