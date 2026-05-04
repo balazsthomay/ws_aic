@@ -1,0 +1,16 @@
+# Thin overlay on v1: replaces broken entrypoint and adds missing weights.
+# Both fixes that caused v1's silent submission failure are baked in here.
+FROM my-solution:v1
+
+# Fixed entrypoint: writes a Zenoh session config FILE
+# (the env-var-based ZENOH_CONFIG_OVERRIDE was silently ignored).
+COPY --chmod=755 docker/aic_model/entrypoint_fixed.sh /entrypoint.sh
+
+# Ship the policy weights into the installed package directory.
+# (setup.py is missing package_data; fixed in source for full rebuilds,
+#  but copying directly here avoids re-running pixi install.)
+COPY aic_example_policies/aic_example_policies/ros/weights \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["--ros-args", "-p", "policy:=aic_example_policies.ros.DAggerInsert"]

@@ -8,7 +8,7 @@ services:
       context: ..
     platform: linux/amd64
     command: gazebo_gui:=false launch_rviz:=false ground_truth:=false start_aic_engine:=true shutdown_on_aic_engine_exit:=true
-    gpus: all
+    # gpus: all  # disabled for local Mac eval (no NVIDIA passthrough)
     networks:
       - default
     environment:
@@ -16,12 +16,12 @@ services:
       AIC_MODEL_PASSWD: CHANGE_IN_PROD
       # AIC_ENABLE_ACL: true
   model:
-    image: my-solution:v1
+    image: my-solution:v2
     build:
       dockerfile: docker/aic_model/Dockerfile
       context: ..
     platform: linux/amd64
-    gpus: all
+    # gpus: all  # disabled for local Mac eval (no NVIDIA passthrough)
     networks:
       - default
     environment:

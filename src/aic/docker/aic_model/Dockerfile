@@ -43,16 +43,52 @@ if should_enable_acl; then
   echo "model:$AIC_MODEL_PASSWD" >> /credentials.txt
 fi
 
-# start the model
-ZENOH_CONFIG_OVERRIDE='connect/endpoints=["tcp/'"$AIC_ROUTER_ADDR"'"]'
-ZENOH_CONFIG_OVERRIDE+=';transport/shared_memory/enabled=false'
+# Build a Zenoh session config FILE rather than relying on ZENOH_CONFIG_OVERRIDE.
+# rmw_zenoh_cpp's override env var is silently ignored when overriding connect/endpoints
+# from the default localhost:7447 -- causes silent submission failure (no router connect,
+# no node discovery, engine never sees aic_model, no score).
+ACL_AUTH=""
 if should_enable_acl; then
-  ZENOH_CONFIG_OVERRIDE+=';transport/auth/usrpwd/user="model"'
-  ZENOH_CONFIG_OVERRIDE+=';transport/auth/usrpwd/password="'"$AIC_MODEL_PASSWD"'"'
-  ZENOH_CONFIG_OVERRIDE+=';transport/auth/usrpwd/dictionary_file="/credentials.txt"'
+  ACL_AUTH=$(cat <<ACLEOF
+,
+  transport: {
+    auth: {
+      usrpwd: {
+        user: "model",
+        password: "$AIC_MODEL_PASSWD",
+        dictionary_file: "/credentials.txt",
+      },
+    },
+    shared_memory: { enabled: false },
+  }
+ACLEOF
+)
+else
+  ACL_AUTH=$(cat <<ACLEOF
+,
+  transport: { shared_memory: { enabled: false } }
+ACLEOF
+)
 fi
-export ZENOH_CONFIG_OVERRIDE
-echo "ZENOH_CONFIG_OVERRIDE=$ZENOH_CONFIG_OVERRIDE"
+
+cat > /tmp/zenoh_session_config.json5 <<ZEOF
+{
+  mode: "peer",
+  connect: {
+    endpoints: ["tcp/$AIC_ROUTER_ADDR"],
+    timeout_ms: 10000,
+  },
+  listen: {
+    endpoints: ["tcp/0.0.0.0:0"],
+  },
+  scouting: {
+    multicast: { enabled: false },
+    gossip: { enabled: true },
+  }$ACL_AUTH
+}
+ZEOF
+export ZENOH_SESSION_CONFIG_URI=/tmp/zenoh_session_config.json5
+echo "ZENOH_SESSION_CONFIG_URI=$ZENOH_SESSION_CONFIG_URI"
 exec pixi run --as-is ros2 run aic_model aic_model "$@"
 EOF
 
