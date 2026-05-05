@@ -14,9 +14,9 @@ services:
     environment:
       AIC_EVAL_PASSWD: CHANGE_IN_PROD
       AIC_MODEL_PASSWD: CHANGE_IN_PROD
-      # AIC_ENABLE_ACL: true
+      AIC_ENABLE_ACL: "true"
   model:
-    image: my-solution:v2
+    image: my-solution:v7
     build:
       dockerfile: docker/aic_model/Dockerfile
       context: ..
@@ -29,7 +29,7 @@ services:
       ZENOH_ROUTER_CHECK_ATTEMPTS: -1
       AIC_ROUTER_ADDR: eval:7447
       AIC_MODEL_PASSWD: CHANGE_IN_PROD
-      # AIC_ENABLE_ACL: true
+      AIC_ENABLE_ACL: "true"
 networks:
   default:
     internal: true
