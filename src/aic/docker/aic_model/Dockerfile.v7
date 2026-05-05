@@ -1,0 +1,24 @@
+# v7: simplified diagnostic submission.
+# - v2/v4-style proven Zenoh config (custom file)
+# - 3 candidate endpoints (vs v6's 8)
+# - No multicast (may have crashed v6 on cluster)
+# - InstrumentedSpeedDemon: POSTs at every policy stage so we can see
+#   exactly where things stop
+# - Hardcoded modal webhook URL
+FROM my-solution:v1
+
+# curl for entrypoint diag
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --chmod=755 docker/aic_model/entrypoint_v7.sh /entrypoint.sh
+
+# Add the InstrumentedSpeedDemon policy module.
+COPY aic_example_policies/aic_example_policies/ros/InstrumentedSpeedDemon.py \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/InstrumentedSpeedDemon.py
+
+# Bake the diagnostic webhook URL.
+ENV AIC_DIAG_URL="https://balazs-thomay--aic-diag-collect.modal.run"
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["--ros-args", "-p", "policy:=aic_example_policies.ros.InstrumentedSpeedDemon"]

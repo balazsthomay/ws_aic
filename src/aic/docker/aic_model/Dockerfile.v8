@@ -1,0 +1,19 @@
+# v8: same proven entrypoint as v7, swap policy to InstrumentedGentleGiant
+# (low stiffness + high damping → avoids Tier 2 force penalty).
+FROM my-solution:v1
+
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --chmod=755 docker/aic_model/entrypoint_v7.sh /entrypoint.sh
+
+# Add both instrumented policies (keeps the image flexible).
+COPY aic_example_policies/aic_example_policies/ros/InstrumentedSpeedDemon.py \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/InstrumentedSpeedDemon.py
+COPY aic_example_policies/aic_example_policies/ros/InstrumentedGentleGiant.py \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/InstrumentedGentleGiant.py
+
+ENV AIC_DIAG_URL="https://balazs-thomay--aic-diag-collect.modal.run"
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["--ros-args", "-p", "policy:=aic_example_policies.ros.InstrumentedGentleGiant"]
