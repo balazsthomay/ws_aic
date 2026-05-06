@@ -15,8 +15,7 @@ GCLOUD=${GCLOUD:-/opt/homebrew/share/google-cloud-sdk/bin/gcloud}
 MODEL_TAG="${1:-v8}"
 ZONE="${ZONE:-us-east1-b}"
 MACHINE="${MACHINE:-c3-standard-8}"
-IMAGE_FAMILY="${IMAGE_FAMILY:-ubuntu-2404-lts-amd64}"
-IMAGE_PROJECT="${IMAGE_PROJECT:-ubuntu-os-cloud}"
+IMAGE="${IMAGE:-aic-eval-base}"   # custom image: docker + aws-cli + aic_eval pre-pulled
 INSTANCE="aic-eval-$(date +%s)-$RANDOM"
 
 # AWS creds for ECR (read once from local 'aic' profile, passed via instance metadata)
@@ -30,19 +29,7 @@ STARTUP=$(cat <<EOF
 set -ex
 exec > >(tee /var/log/aic_eval.log) 2>&1
 
-# Install docker + aws cli
-apt-get update -y
-apt-get install -y ca-certificates curl gnupg unzip
-# AWS CLI v2 (no longer in Ubuntu 24.04 apt repos)
-curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
-unzip -q /tmp/awscliv2.zip -d /tmp
-/tmp/aws/install --update
-install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu noble stable" > /etc/apt/sources.list.d/docker.list
-apt-get update -y
-apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-systemctl enable --now docker
+# Image already has docker + aws-cli + aic_eval:latest baked in via aic-eval-base.
 
 # ECR login
 export AWS_ACCESS_KEY_ID=$AWS_AKID
@@ -50,9 +37,7 @@ export AWS_SECRET_ACCESS_KEY=$AWS_SAK
 export AWS_DEFAULT_REGION=us-east-1
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 973918476471.dkr.ecr.us-east-1.amazonaws.com
 
-# Pull images sequentially (parallel-pull-with-wait was hanging in startup-script context)
-echo "[gcp_eval] pulling eval image..."
-docker pull ghcr.io/intrinsic-dev/aic/aic_eval:latest
+# aic_eval is already in the image. Only need to pull the model image.
 echo "[gcp_eval] pulling model image..."
 docker pull 973918476471.dkr.ecr.us-east-1.amazonaws.com/aic-team/balazs:$MODEL_TAG
 echo "[gcp_eval] pulls done"
@@ -71,6 +56,10 @@ echo "[gcp_eval] pulls done"
   echo '      AIC_ENABLE_ACL: "true"'
   echo '  model:'
   echo "    image: 973918476471.dkr.ecr.us-east-1.amazonaws.com/aic-team/balazs:$MODEL_TAG"
+  : "${POLICY_OVERRIDE:=}"
+  if [[ -n "$POLICY_OVERRIDE" ]]; then
+    echo "    command: ['--ros-args', '-p', 'policy:=aic_example_policies.ros.${POLICY_OVERRIDE}']"
+  fi
   echo '    networks: [default]'
   echo '    environment:'
   echo '      RMW_IMPLEMENTATION: rmw_zenoh_cpp'
@@ -97,9 +86,8 @@ for Z in "${ZONES[@]}"; do
   if "$GCLOUD" compute instances create "$INSTANCE" \
        --zone="$Z" \
        --machine-type="$MACHINE" \
-       --image-family="$IMAGE_FAMILY" \
-       --image-project="$IMAGE_PROJECT" \
-       --boot-disk-size=40GB \
+       --image="$IMAGE" \
+       --boot-disk-size=60GB \
        --boot-disk-type=pd-balanced \
        --provisioning-model=SPOT \
        --instance-termination-action=DELETE \
