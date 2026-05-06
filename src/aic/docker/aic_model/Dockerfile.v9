@@ -1,0 +1,86 @@
+# v9: DINOv2 + ACT (Action Chunking Transformer) policy.
+#
+# - FROM v1 base (which already has torch 2.7.1, einops, huggingface_hub, lerobot).
+# - Bootstraps pip and installs transformers (no-deps, since torch/einops/hf-hub
+#   are already in the pixi env).
+# - Pre-downloads DINOv2-S/14 weights at build time so the policy never needs
+#   network egress at run time. Sets HF_HUB_OFFLINE=1 to enforce it.
+# - Bakes the trained ACT head + norm stats into the image.
+# - Reuses the proven entrypoint_v7.sh (Zenoh session config + diag posts).
+
+FROM my-solution:v1
+
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# --- Bootstrap pip + install transformers without disturbing the pixi env ---
+ENV PIXI_PY=/ws_aic/src/aic/.pixi/envs/default/bin/python3
+RUN $PIXI_PY -m ensurepip --default-pip \
+    && $PIXI_PY -m pip install --no-cache-dir --no-deps --root-user-action=ignore \
+        transformers==4.46.0 tokenizers==0.20.1 safetensors==0.4.5 \
+        regex==2024.7.24 hf-xet
+
+# --- Pre-download DINOv2-S/14 to a baked, deterministic location ---
+ENV HF_HOME=/opt/hf
+ENV TRANSFORMERS_CACHE=/opt/hf
+ENV HF_HUB_DOWNLOAD_TIMEOUT=300
+RUN $PIXI_PY -c "from transformers import AutoModel, AutoImageProcessor; \
+    AutoImageProcessor.from_pretrained('facebook/dinov2-small', cache_dir='/opt/hf'); \
+    AutoModel.from_pretrained('facebook/dinov2-small', cache_dir='/opt/hf')"
+
+# Save a snapshot at a fixed path so DINOv2ACT.py can load by literal directory
+RUN $PIXI_PY -c "from transformers import AutoModel, AutoImageProcessor; \
+    p = AutoModel.from_pretrained('facebook/dinov2-small', cache_dir='/opt/hf'); \
+    p.save_pretrained('/ws_aic/src/aic/aic_example_policies/aic_example_policies/ros/weights/dinov2-small'); \
+    pp = AutoImageProcessor.from_pretrained('facebook/dinov2-small', cache_dir='/opt/hf'); \
+    pp.save_pretrained('/ws_aic/src/aic/aic_example_policies/aic_example_policies/ros/weights/dinov2-small')"
+
+# Lock down to offline mode at runtime — no network needed once cached
+ENV HF_HUB_OFFLINE=1
+ENV TRANSFORMERS_OFFLINE=1
+
+# --- Copy ACT head weights, norm stats, and policy file ---
+COPY aic_example_policies/aic_example_policies/ros/DINOv2ACT.py \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/DINOv2ACT.py
+
+# (The training pipeline writes these to data/outputs; we copy from the
+# corresponding files inside the build context — see the helper docker-build
+# step in scripts/build_v9.sh which stages the weights into aic/.)
+COPY aic_example_policies/aic_example_policies/ros/weights/act_policy.pt \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/act_policy.pt
+COPY aic_example_policies/aic_example_policies/ros/weights/act_norm_stats.npz \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/act_norm_stats.npz
+
+# Mirror DINOv2 snapshot into the policy's weights/ dir too
+RUN cp -r /ws_aic/src/aic/aic_example_policies/aic_example_policies/ros/weights/dinov2-small \
+    /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/dinov2-small
+
+# Also keep instrumented baselines available (handy for fallback testing)
+COPY aic_example_policies/aic_example_policies/ros/InstrumentedSpeedDemon.py \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/InstrumentedSpeedDemon.py
+COPY aic_example_policies/aic_example_policies/ros/InstrumentedGentleGiant.py \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/InstrumentedGentleGiant.py
+COPY aic_example_policies/aic_example_policies/ros/ScriptedPlay.py \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/ScriptedPlay.py
+COPY aic_example_policies/aic_example_policies/ros/weights/scripted_traj.npz \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/scripted_traj.npz
+
+# DINOv2 + Port localizer + DAgger MLP hybrid policy
+COPY aic_example_policies/aic_example_policies/ros/DINOv2HybridDAgger.py \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/DINOv2HybridDAgger.py
+COPY aic_example_policies/aic_example_policies/ros/weights/port_localizer_dinov2.pt \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/port_localizer_dinov2.pt
+COPY aic_example_policies/aic_example_policies/ros/weights/port_localizer_stats.npz \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/port_localizer_stats.npz
+COPY aic_example_policies/aic_example_policies/ros/weights/mlp_policy_best.pt \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/mlp_policy_best.pt
+COPY aic_example_policies/aic_example_policies/ros/weights/norm_stats.npz \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/norm_stats.npz
+
+COPY docker/aic_model/entrypoint_v7.sh /entrypoint.sh
+RUN chmod 755 /entrypoint.sh
+
+ENV AIC_DIAG_URL="https://balazs-thomay--aic-diag-collect.modal.run"
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["--ros-args", "-p", "policy:=aic_example_policies.ros.DINOv2ACT"]

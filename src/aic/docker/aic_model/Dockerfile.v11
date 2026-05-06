@@ -1,0 +1,31 @@
+# v11: ScriptedPlay (deterministic blind IK at NOMINAL port).
+#
+# Rationale: v9 (CLS DINOv2+ACT) scored Tier 3 = 0 on cluster — the model
+# trained on MuJoCo's bright-green NIC pixels doesn't see the same thing in
+# Gazebo. Falling back to a vision-free baseline that aims for the nominal
+# port; with ±15 mm board randomization, a blind trajectory should at least
+# get inside the proximity-credit window.
+
+FROM my-solution:v1
+
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY aic_example_policies/aic_example_policies/ros/ScriptedPlay.py \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/ScriptedPlay.py
+COPY aic_example_policies/aic_example_policies/ros/weights/scripted_traj.npz \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/scripted_traj.npz
+
+# Keep instrumented baselines for fallback
+COPY aic_example_policies/aic_example_policies/ros/InstrumentedSpeedDemon.py \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/InstrumentedSpeedDemon.py
+COPY aic_example_policies/aic_example_policies/ros/InstrumentedGentleGiant.py \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/InstrumentedGentleGiant.py
+
+COPY docker/aic_model/entrypoint_v7.sh /entrypoint.sh
+RUN chmod 755 /entrypoint.sh
+
+ENV AIC_DIAG_URL="https://balazs-thomay--aic-diag-collect.modal.run"
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["--ros-args", "-p", "policy:=aic_example_policies.ros.ScriptedPlay"]
