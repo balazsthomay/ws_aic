@@ -66,11 +66,22 @@ MLP_PT = WEIGHTS_DIR / "mlp_policy_best.pt"
 MLP_STATS = WEIGHTS_DIR / "norm_stats.npz"
 
 CONTROL_HZ = 20
-MAX_TIME = 30.0                # slow the trajectory to match cluster's ~0.04 rad/s
-                               # joint rate limit; trained trajectory was 14s
+MAX_TIME = 60.0                # bigger budget — state-driven progress means the
+                               # policy can take its time without firing descent early
 VISION_INTERVAL = 4
 TRANSITION_HOLD = 35.0         # cluster rate-limits ~0.04 rad/s; wrist swing needs ~20s
 HOME_SETTLE_TOL = 0.05         # rad — exit hold early if max-joint-error <= this
+
+# State-driven progress (replaces time-driven). Empirically derived from demos:
+# - frames 0–100 (approach): joint-dist climbs to ~1.08 rad while tcp_z stays ~1.388
+# - frames 100–279 (descent): joint-dist plateau, tcp_z drops 1.388 → 1.317
+# - Time-based progress made the MLP issue descent commands at t=0.5 even when
+#   the rate-limited arm hadn't finished approach. State-driven uses physical
+#   reality of where the arm is.
+APPROACH_DIST = 1.05            # joint-space rad until descent begins
+APPROACH_FRAC = 0.36            # corresponds to t=100/279 in demos
+DESCENT_Z_START = 1.388
+DESCENT_Z_END = 1.317
 # Low damping during transition so the wrist (q[5]) actually swings.
 # v12 saw err=0.81 stuck because damping=15 ate the small wrist torque
 # budget. Matches SpeedDemon's gains, which DO swing the arm fast.
@@ -143,10 +154,23 @@ class DINOv2HybridDAgger(Policy):
         torch.set_num_threads(max(1, os.cpu_count() or 1))
 
         from transformers import AutoModel
-        self.get_logger().info(f"Loading DINOv2 from {DINOV2_DIR}")
+        self.get_logger().info(f"Loading backbone from {DINOV2_DIR}")
         self._dinov2 = AutoModel.from_pretrained(str(DINOV2_DIR)).to(self._device).eval()
         for p in self._dinov2.parameters():
             p.requires_grad_(False)
+        # Auto-detect grid + register-token count so the same policy works on
+        # DINOv2-S/14 (16x16 patches, 0 reg) and DINOv3-vits16 (14x14, 4 reg).
+        self._patch_size = int(self._dinov2.config.patch_size)
+        self._native_grid = DINOV2_INPUT // self._patch_size
+        with torch.no_grad():
+            dummy = torch.zeros(1, 3, DINOV2_INPUT, DINOV2_INPUT)
+            n_tokens = self._dinov2(pixel_values=dummy).last_hidden_state.shape[1]
+        self._n_skip = n_tokens - self._native_grid * self._native_grid
+        self._vision_dim = int(self._dinov2.config.hidden_size)
+        self.get_logger().info(
+            f"Backbone: patch={self._patch_size} grid={self._native_grid}x{self._native_grid} "
+            f"skip={self._n_skip} dim={self._vision_dim}"
+        )
 
         self._loc = PortLocalizer().to(self._device).eval()
         self._loc.load_state_dict(torch.load(
@@ -304,12 +328,13 @@ class DINOv2HybridDAgger(Policy):
 
         with torch.no_grad():
             hs = self._dinov2(pixel_values=pixel_values).last_hidden_state
-            patches = hs[:, 1:, :]                # (3, 256, 384)
-            grid = patches.reshape(3, 16, 16, 384).permute(0, 3, 1, 2)
+            patches = hs[:, self._n_skip:, :]
+            G, D = self._native_grid, self._vision_dim
+            grid = patches.reshape(3, G, G, D).permute(0, 3, 1, 2)
             pooled = F.adaptive_avg_pool2d(grid, PATCH_GRID)
             feats = pooled.permute(0, 2, 3, 1).reshape(
-                3, PATCH_GRID * PATCH_GRID, 384
-            ).unsqueeze(0)                         # (1, 3, 16, 384)
+                3, PATCH_GRID * PATCH_GRID, D
+            ).unsqueeze(0)
 
             port_norm = self._loc(feats).squeeze(0)
             port_xy = (port_norm * self._port_std + self._port_mean).cpu().numpy()
@@ -330,7 +355,19 @@ class DINOv2HybridDAgger(Policy):
         q = cs.tcp_pose.orientation
         tcp_quat = np.array([q.w, q.x, q.y, q.z])
         tip_pos = tcp_pos + _quat_to_rot(tcp_quat) @ TIP_OFFSET_TCP_FRAME
-        progress = min(elapsed / MAX_TIME, 1.0)
+        # State-driven progress (see header constants). Time-based progress
+        # tripped the MLP into descent before the rate-limited arm finished
+        # the approach in v17/v18. State-based ties progress to where the arm
+        # physically is, not how long it's been trying.
+        d_q = float(np.linalg.norm(joint_pos - MUJOCO_HOME))
+        if d_q < APPROACH_DIST:
+            progress = APPROACH_FRAC * (d_q / APPROACH_DIST)
+        else:
+            z_span = DESCENT_Z_START - DESCENT_Z_END
+            z_frac = (DESCENT_Z_START - tcp_pos[2]) / max(z_span, 1e-6)
+            z_frac = float(np.clip(z_frac, 0.0, 1.0))
+            progress = APPROACH_FRAC + (1.0 - APPROACH_FRAC) * z_frac
+        progress = float(np.clip(progress, 0.0, 1.0))
         return np.concatenate([
             joint_pos, joint_vel, tcp_pos, tcp_quat,
             tip_pos, port_pos, [progress],

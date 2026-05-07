@@ -42,9 +42,17 @@ image = (
         "transformers>=4.55.0",   # DINOv3 needs >=4.49 for the model_type
         "safetensors",
         "hf-xet",
+        "hf-transfer",            # parallel downloads (avoids 1h+ hangs)
         "einops",
         "numpy",
     )
+    .env({
+        "HF_HOME": "/vol/hf_cache",            # persist downloads across runs
+        "HF_HUB_ENABLE_HF_TRANSFER": "1",      # parallel chunked downloads
+        "HF_HUB_DISABLE_XET": "1",             # xet stalls on Modal volume IO
+        "TRANSFORMERS_VERBOSITY": "info",      # show download progress
+        "HF_HUB_DOWNLOAD_TIMEOUT": "300",
+    })
 )
 
 app = modal.App("aic-train-vision", image=image)
@@ -69,10 +77,15 @@ CAMERAS = ("left", "center", "right")
 
 def load_backbone(name: str, device: str):
     from transformers import AutoImageProcessor, AutoModel
-    print(f"Loading {name}...", flush=True)
+    t0 = time.time()
+    print(f"[backbone] AutoImageProcessor.from_pretrained({name})...", flush=True)
     proc = AutoImageProcessor.from_pretrained(name)
     proc.size = {"height": 224, "width": 224}
+    print(f"[backbone] processor done ({time.time()-t0:.1f}s); fetching weights...", flush=True)
+    t1 = time.time()
     model = AutoModel.from_pretrained(name).to(device).eval()
+    print(f"[backbone] model loaded in {time.time()-t1:.1f}s "
+          f"(total {time.time()-t0:.1f}s)", flush=True)
     for p in model.parameters():
         p.requires_grad_(False)
     return proc, model
@@ -413,6 +426,40 @@ def pipeline(
 
     return {"tag": tag, "feats": str(feats_path),
             "act": str(act_w), "loc": str(loc_w)}
+
+
+@app.function(
+    volumes={VOL: vol},
+    secrets=[modal.Secret.from_name("huggingface-secret")],
+    timeout=1800,
+)
+def prewarm_hf(backbone: str = "facebook/dinov3-vits16-pretrain-lvd1689m"):
+    """Download an HF model into the Modal volume's HF cache.
+
+    Uses snapshot_download for deterministic progress. Caches to
+    `/vol/hf_cache` so subsequent training functions skip the download.
+    """
+    import os
+    import time
+    from huggingface_hub import snapshot_download
+    t0 = time.time()
+    print(f"[prewarm] HF_HOME={os.environ.get('HF_HOME')}, "
+          f"hf_transfer={os.environ.get('HF_HUB_ENABLE_HF_TRANSFER')}", flush=True)
+    print(f"[prewarm] snapshot_download {backbone}", flush=True)
+    path = snapshot_download(
+        repo_id=backbone,
+        token=os.environ.get("HF_TOKEN"),
+        cache_dir=os.path.join(os.environ.get("HF_HOME", "/vol/hf_cache"), "hub"),
+    )
+    print(f"[prewarm] snapshot done in {time.time()-t0:.1f}s -> {path}", flush=True)
+    # Verify weights load (catches version mismatches early)
+    t1 = time.time()
+    from transformers import AutoModel, AutoImageProcessor
+    AutoImageProcessor.from_pretrained(backbone)
+    AutoModel.from_pretrained(backbone)
+    print(f"[prewarm] from_pretrained verified ({time.time()-t1:.1f}s)", flush=True)
+    vol.commit()
+    print(f"[prewarm] done in {time.time()-t0:.1f}s", flush=True)
 
 
 @app.local_entrypoint()

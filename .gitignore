@@ -16,6 +16,7 @@ CLAUDE.md
 .coverage
 .superset
 MUJOCO_LOG.TXT
+.DS_Store
 
 # Generated MuJoCo meshes (re-generate with scripts/generate_meshes.py)
 src/aic/aic_utils/aic_mujoco/mjcf/meshes/

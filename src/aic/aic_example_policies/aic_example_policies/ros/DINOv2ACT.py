@@ -180,12 +180,24 @@ class DINOv2ACT(Policy):
         # Load frozen DINOv2 from local path (baked into image)
         from transformers import AutoModel
 
-        self.get_logger().info(f"Loading DINOv2 from {DINOV2_DIR}")
+        self.get_logger().info(f"Loading backbone from {DINOV2_DIR}")
         self._dinov2 = AutoModel.from_pretrained(str(DINOV2_DIR)).to(self._device).eval()
         for p in self._dinov2.parameters():
             p.requires_grad_(False)
         n_params = sum(p.numel() for p in self._dinov2.parameters()) / 1e6
-        self.get_logger().info(f"DINOv2 loaded: {n_params:.1f}M params (frozen)")
+        # Auto-detect grid + register-token count so this works for DINOv2 and DINOv3.
+        self._patch_size = int(self._dinov2.config.patch_size)
+        self._native_grid = DINOV2_INPUT // self._patch_size
+        with torch.no_grad():
+            dummy = torch.zeros(1, 3, DINOV2_INPUT, DINOV2_INPUT)
+            n_tokens = self._dinov2(pixel_values=dummy).last_hidden_state.shape[1]
+        self._n_skip = n_tokens - self._native_grid * self._native_grid
+        self._vision_dim = int(self._dinov2.config.hidden_size)
+        self.get_logger().info(
+            f"Backbone: {n_params:.1f}M params, patch={self._patch_size}, "
+            f"grid={self._native_grid}x{self._native_grid}, skip={self._n_skip}, "
+            f"dim={self._vision_dim}"
+        )
 
         # Load ACT head — auto-detect mode (cls vs patches) from checkpoint
         payload = torch.load(str(ACT_WEIGHTS), map_location="cpu", weights_only=True)
@@ -353,15 +365,16 @@ class DINOv2ACT(Policy):
                 feats = hs[:, 0, :]                      # (3, 384)
                 vision_tokens = feats.unsqueeze(0)       # (1, 3, 384)
             else:
-                # Patches: drop CLS, pool 16x16 → PATCH_GRID
-                patches = hs[:, 1:, :]                   # (3, 256, 384)
-                Bv, _, D = patches.shape
-                grid = patches.reshape(Bv, 16, 16, D).permute(0, 3, 1, 2)
+                # Patches: drop CLS + register tokens, pool native grid → PATCH_GRID
+                patches = hs[:, self._n_skip:, :]
+                G, D = self._native_grid, self._vision_dim
+                Bv = patches.shape[0]
+                grid = patches.reshape(Bv, G, G, D).permute(0, 3, 1, 2)
                 pooled = F.adaptive_avg_pool2d(grid, PATCH_GRID)
                 feats = pooled.permute(0, 2, 3, 1).reshape(
                     Bv, PATCH_GRID * PATCH_GRID, D
-                )                                         # (3, 16, 384)
-                vision_tokens = feats.unsqueeze(0)       # (1, 3, 16, 384)
+                )
+                vision_tokens = feats.unsqueeze(0)
 
             state_t = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
             state_norm = (state_t - self._s_mean) / self._s_std
