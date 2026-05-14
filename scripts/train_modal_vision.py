@@ -253,7 +253,14 @@ def train_act(feats_path: Path, weights_path: Path, stats_path: Path,
     n_val = int(n * val_frac)
     val_idx, train_idx = perm[:n_val], perm[n_val:]
 
-    model = ACTHead(vision_dim=vision_dim, n_spatial=n_spatial).to(device)
+    state_dim = int(S.shape[-1])
+    action_dim = int(A.shape[-1])
+    model = ACTHead(
+        vision_dim=vision_dim, state_dim=state_dim,
+        action_dim=action_dim, n_spatial=n_spatial,
+    ).to(device)
+    print(f"ACTHead: state_dim={state_dim}, action_dim={action_dim}, "
+          f"n_spatial={n_spatial}", flush=True)
     opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, epochs)
 
@@ -282,7 +289,9 @@ def train_act(feats_path: Path, weights_path: Path, stats_path: Path,
                 torch.save({
                     "state_dict": model.state_dict(),
                     "config": dict(mode="patches", n_spatial=n_spatial,
-                                   vision_dim=vision_dim, state_dim=26, action_dim=6,
+                                   vision_dim=vision_dim,
+                                   state_dim=state_dim,
+                                   action_dim=action_dim,
                                    chunk_size=16, n_cams=3, d_model=256,
                                    nhead=4, num_layers=4),
                 }, weights_path)

@@ -1,0 +1,87 @@
+# v38: ACT trained on synthetic GT-pose seating demos (DINOv3 features + ACT head).
+#
+# Same architecture base as v26 (DINOv3 backbone, frozen). The only inference-
+# time policy change is: swap OnlineIK (DINO localizer + IK descent) for
+# DINOv2ACT (DINOv3 features + ACT chunked actions). ACT was trained on demos
+# collected via SeatingCollector with ground-truth port pose, on Modal.
+#
+# DINOv3 weights baked at the same path as v26 — only act_policy.pt + stats are new.
+
+FROM my-solution:v1
+
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PIXI_PY=/ws_aic/src/aic/.pixi/envs/default/bin/python3
+RUN $PIXI_PY -m ensurepip --default-pip \
+    && $PIXI_PY -m pip install --no-cache-dir --no-deps --root-user-action=ignore \
+        transformers==4.56.0 tokenizers==0.22.0 safetensors==0.4.5 \
+        regex==2024.7.24 hf-xet huggingface_hub==0.34.0 \
+    && $PIXI_PY -m pip install --no-cache-dir --root-user-action=ignore \
+        mujoco==3.6.0
+
+ENV HF_HOME=/opt/hf
+ENV TRANSFORMERS_CACHE=/opt/hf
+ENV HF_HUB_DOWNLOAD_TIMEOUT=300
+
+ARG HF_TOKEN
+RUN $PIXI_PY -c "import os; os.environ['HF_TOKEN']='${HF_TOKEN}'; \
+    from transformers import AutoModel, AutoImageProcessor; \
+    AutoImageProcessor.from_pretrained('facebook/dinov3-vits16-pretrain-lvd1689m', cache_dir='/opt/hf'); \
+    AutoModel.from_pretrained('facebook/dinov3-vits16-pretrain-lvd1689m', cache_dir='/opt/hf')"
+
+RUN $PIXI_PY -c "import os; os.environ['HF_TOKEN']='${HF_TOKEN}'; \
+    from transformers import AutoModel, AutoImageProcessor; \
+    p = AutoModel.from_pretrained('facebook/dinov3-vits16-pretrain-lvd1689m', cache_dir='/opt/hf'); \
+    p.save_pretrained('/ws_aic/src/aic/aic_example_policies/aic_example_policies/ros/weights/dinov2-small'); \
+    pp = AutoImageProcessor.from_pretrained('facebook/dinov3-vits16-pretrain-lvd1689m', cache_dir='/opt/hf'); \
+    pp.save_pretrained('/ws_aic/src/aic/aic_example_policies/aic_example_policies/ros/weights/dinov2-small')"
+
+ENV HF_HUB_OFFLINE=1
+ENV TRANSFORMERS_OFFLINE=1
+
+# --- Policy code (DINOv2ACT is the v38 inference policy; others are fallbacks) ---
+COPY aic_example_policies/aic_example_policies/ros/DINOv2ACT.py \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/DINOv2ACT.py
+COPY aic_example_policies/aic_example_policies/ros/OnlineIK.py \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/OnlineIK.py
+COPY aic_example_policies/aic_example_policies/ros/ScriptedVision.py \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/ScriptedVision.py
+COPY aic_example_policies/aic_example_policies/ros/ScriptedPlay.py \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/ScriptedPlay.py
+COPY aic_example_policies/aic_example_policies/ros/SeatingCollector.py \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/SeatingCollector.py
+
+# --- MJCF scene + meshes (kept so OnlineIK fallback still works) ---
+COPY aic_utils/aic_mujoco/mjcf/scene.xml \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/scene/scene.xml
+COPY aic_utils/aic_mujoco/mjcf/aic_world.xml \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/scene/aic_world.xml
+COPY aic_utils/aic_mujoco/mjcf/aic_robot.xml \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/scene/aic_robot.xml
+COPY aic_utils/aic_mujoco/mjcf/meshes \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/scene/meshes
+
+# --- Localizer weights (v26's; OnlineIK fallback uses these) ---
+COPY aic_example_policies/aic_example_policies/ros/weights/port_localizer_dinov2.pt \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/port_localizer_dinov2.pt
+COPY aic_example_policies/aic_example_policies/ros/weights/port_localizer_stats.npz \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/port_localizer_stats.npz
+
+# --- ACT weights (NEW for v38, trained on Modal from synthetic GT seating demos) ---
+COPY aic_example_policies/aic_example_policies/ros/weights/act_policy.pt \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/act_policy.pt
+COPY aic_example_policies/aic_example_policies/ros/weights/act_norm_stats.npz \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/act_norm_stats.npz
+
+# Mirror DINO weights into the runtime path.
+RUN cp -r /ws_aic/src/aic/aic_example_policies/aic_example_policies/ros/weights/dinov2-small \
+    /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/dinov2-small
+
+COPY docker/aic_model/entrypoint_v7.sh /entrypoint.sh
+RUN chmod 755 /entrypoint.sh
+
+ENV AIC_DIAG_URL="https://balazs-thomay--aic-diag-collect.modal.run"
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["--ros-args", "-p", "policy:=aic_example_policies.ros.DINOv2ACT"]

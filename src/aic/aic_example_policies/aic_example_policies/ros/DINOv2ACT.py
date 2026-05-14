@@ -103,8 +103,14 @@ JOINT_LOWER = np.array([-2 * np.pi] * 6)
 JOINT_UPPER = np.array([2 * np.pi] * 6)
 MAX_JOINT_STEP = 0.05
 
-# Port placeholder (port_pos slot in 26D state — not directly used by ACT, but
-# matches training format)
+# State vector layout — must match SeatingCollector._build_state exactly.
+# Default 32-D = 26-D legacy layout + 6-D wrist wrench appended (v39+).
+# At load time the policy auto-detects the actual state_dim from the saved
+# checkpoint config so an old 26-D model still works without retraining.
+STATE_DIM = 32
+WRENCH_DIM = 6
+# Port placeholder (port_pos slot — not directly used by ACT, but matches
+# training format)
 NOMINAL_PORT_POS = np.array([0.220, -0.013, 1.273])
 
 
@@ -117,7 +123,7 @@ class ACTHead(nn.Module):
     def __init__(
         self,
         vision_dim: int = 384,
-        state_dim: int = 26,
+        state_dim: int = STATE_DIM,
         action_dim: int = 6,
         chunk_size: int = CHUNK_SIZE,
         n_cams: int = N_CAMS,
@@ -212,10 +218,17 @@ class DINOv2ACT(Policy):
             sd = payload
         self._mode = cfg.get("mode", "cls")
         self._n_spatial = cfg["n_spatial"]
-        self._act = ACTHead(n_spatial=self._n_spatial).to(self._device).eval()
+        # Auto-detect state_dim from the checkpoint so an old (26-D) model
+        # still loads if someone reverts. New (v39) models train at 32-D.
+        ckpt_state_dim = int(cfg.get("state_dim", STATE_DIM))
+        self._act = ACTHead(
+            n_spatial=self._n_spatial, state_dim=ckpt_state_dim,
+        ).to(self._device).eval()
         self._act.load_state_dict(sd)
+        self._state_dim = ckpt_state_dim
         self.get_logger().info(
-            f"ACT loaded: mode={self._mode}, n_spatial={self._n_spatial}"
+            f"ACT loaded: mode={self._mode}, n_spatial={self._n_spatial}, "
+            f"state_dim={self._state_dim}"
         )
 
         # Norm stats (action chunks were normalized at training time)
@@ -384,7 +397,7 @@ class DINOv2ACT(Policy):
 
         return action.cpu()
 
-    # --- State construction (matches DAggerInsert / collect_demos.py) ---
+    # --- State construction (must match SeatingCollector._build_state exactly) ---
 
     def _build_state(self, obs: Observation, elapsed: float) -> np.ndarray | None:
         js = obs.joint_states
@@ -410,10 +423,15 @@ class DINOv2ACT(Policy):
 
         progress = min(elapsed / MAX_TIME, 1.0)
 
-        return np.concatenate([
+        wrench = _read_wrench(obs)
+
+        full = np.concatenate([
             joint_pos, joint_vel, tcp_pos, tcp_quat,
-            tip_pos, port_pos, [progress],
+            tip_pos, port_pos, [progress], wrench,
         ])
+        # Slice to whatever state_dim the loaded checkpoint expects; lets
+        # an old 26-D model keep working without retraining.
+        return full[: self._state_dim]
 
     # --- Joint command (same as DAggerInsert) ---
 
@@ -470,3 +488,20 @@ def _quat_to_rot(q_wxyz: np.ndarray) -> np.ndarray:
         [2*(x*y + w*z),     1 - 2*(x*x + z*z), 2*(y*z - w*x)],
         [2*(x*z - w*y),     2*(y*z + w*x),     1 - 2*(x*x + y*y)],
     ])
+
+
+def _read_wrench(obs) -> np.ndarray:
+    """Pull the 6-D wrist wrench (Fx,Fy,Fz,Tx,Ty,Tz) from an observation.
+
+    Mirrors SeatingCollector._read_wrench exactly — the two MUST stay in
+    sync or the policy sees a different state at inference than during
+    training. Returns zeros if the field is missing or malformed.
+    """
+    try:
+        w = obs.wrist_wrench.wrench
+        return np.array([
+            w.force.x, w.force.y, w.force.z,
+            w.torque.x, w.torque.y, w.torque.z,
+        ], dtype=np.float64)
+    except Exception:
+        return np.zeros(WRENCH_DIM, dtype=np.float64)
