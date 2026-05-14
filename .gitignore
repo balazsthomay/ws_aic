@@ -20,3 +20,7 @@ MUJOCO_LOG.TXT
 
 # Generated MuJoCo meshes (re-generate with scripts/generate_meshes.py)
 src/aic/aic_utils/aic_mujoco/mjcf/meshes/
+
+# Demo data + cached collections (15GB+ of episode .npz files; never commit)
+data/
+/tmp/claude/
