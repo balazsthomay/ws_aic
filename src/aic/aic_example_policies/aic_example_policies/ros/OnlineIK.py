@@ -92,7 +92,9 @@ MJ_HOME = np.array([0.6, -1.3, -1.9, -1.57, 1.57, 0.6])
 # pose specs — these are gripper geometry, an invariant). Z varies slightly
 # per cable; XY is constant per cable family.
 CABLE_OFFSETS = {
-    "sfp_sc_cable":           np.array([0.0, 0.015385, 0.04245]),
+    # SFP: TF-measured plug-in-gripper offset from PortPoseDiag (v33).
+    # Was the YAML-derived attachment point (0.0, 0.015385, 0.04245).
+    "sfp_sc_cable":           np.array([0.000, -0.0207, 0.0542]),
     "sfp_sc_cable_reversed":  np.array([0.0, 0.015385, 0.04045]),
 }
 DEFAULT_CABLE_OFFSET = np.array([0.0, 0.015385, 0.04245])
@@ -101,6 +103,49 @@ ABOVE_PORT = 0.060
 INSERT_DEPTH = 0.015
 APPROACH_STEPS = 100   # 5s @ 20Hz
 DESCENT_STEPS = 160    # 8s @ 20Hz
+
+# v41: Force-feedback vertical soft-push at the end of descent.
+#
+# v40 tried a 2 cm XY spiral; the lateral motion DRAGGED the cable away
+# from the port (T3 30→10 vs v26 baseline). v41 keeps it vertical: just
+# push 2.5 cm below INSERT_DEPTH with ultra-soft stiffness, watching Fz.
+# Mirrors the push step from SeatingCollector that achieved 82/84 seats.
+SEAT_STIFFNESS = [80.0, 80.0, 80.0, 40.0, 40.0, 40.0]
+SEAT_DAMPING = [6.0, 6.0, 6.0, 3.0, 3.0, 3.0]
+SEAT_PUSH_DEPTH_M = 0.025      # 2.5 cm extra descent past INSERT_DEPTH
+SEAT_PUSH_STEPS = 100          # 5 s @ 20 Hz
+SEAT_FINAL_HOLD_STEPS = 30     # 1.5 s post-push hold
+SEAT_FZ_BOTTOM_N = 8.0         # +delta_fz > this signals faceplate bottom-out
+SEAT_FZ_DESCENT_SKIP_N = 30.0  # skip push if descent already loaded too high
+
+# v42: Localizer ensemble at SAFE_POSE (kept on but found ineffective —
+# the localizer error is BIAS not variance, averaging at one pose doesn't
+# help). Disabled by setting LOC_ENSEMBLE_SAMPLES=1. Keep code path for
+# possible future reuse.
+LOC_ENSEMBLE_SAMPLES = 1
+LOC_ENSEMBLE_JIGGLE_RAD = 0.10
+LOC_ENSEMBLE_SETTLE_TICKS = 30
+
+# v43: Probe-and-retract grid search.
+# v41/v42 confirmed localizer bias of 7-9 cm. v40's continuous spiral
+# DRAGGED the cable and lost proximity (T3 30→10). v43 instead probes a
+# small grid: center first, then 4 cardinal at 5 cm, then 4 corners at
+# 7 cm. Each probe is a clean vertical push under soft stiffness with
+# retract between probes (so cable doesn't bend). Stops on first Fz drop
+# signature (cable entered hole).
+PROBE_OFFSETS_M = [
+    (0.00,  0.00),                                    # center first
+    (+0.05, 0.00), (-0.05, 0.00), (0.00, +0.05), (0.00, -0.05),
+    (+0.07, +0.07), (+0.07, -0.07), (-0.07, +0.07), (-0.07, -0.07),
+]
+PROBE_PUSH_DEPTH_M = 0.025     # 2.5 cm down per probe
+PROBE_PUSH_STEPS = 50          # 2.5 s per push
+PROBE_RETRACT_M = 0.030        # 3 cm up between probes
+PROBE_RETRACT_STEPS = 20       # 1.0 s retract
+PROBE_FZ_DROP_N = 4.0          # |delta| > this signals cable entered hole
+PROBE_FZ_BOTTOM_N = 10.0       # +delta > this signals faceplate bottom-out
+PROBE_FINAL_PUSH_STEPS = 40    # 2 s extra push after entering hole
+PROBE_FINAL_PUSH_M = 0.012     # 1.2 cm extra past entry
 
 DINOV2_INPUT = 224
 PATCH_GRID = 4
@@ -272,8 +317,57 @@ class OnlineIK(Policy):
             d_ik.qpos[self._qids] += 0.15 * dq
         return d_ik.qpos[self._qids].copy()
 
+    def _build_approach(self, port_world_xyz: np.ndarray,
+                        gripper_offset: np.ndarray
+                        ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Build approach segment only — MJ_HOME → above port (perturbed
+        by initial localizer estimate). Returns (approach, tcp_above, q_end).
+        """
+        tcp_home = self._d.site_xpos[self._tcp_site].copy()
+        tip_offset = self._R_tcp @ gripper_offset
+        tcp_above = port_world_xyz + np.array([0, 0, ABOVE_PORT]) - tip_offset
+
+        approach = np.zeros((APPROACH_STEPS, 6))
+        q_prev = MJ_HOME.copy()
+        for i in range(APPROACH_STEPS):
+            alpha = 0.5 * (1 - math.cos(math.pi * i / max(APPROACH_STEPS - 1, 1)))
+            tcp_i = (1 - alpha) * tcp_home + alpha * tcp_above
+            approach[i] = self._solve_ik(tcp_i, q_prev)
+            q_prev = approach[i]
+        return approach, tcp_above, q_prev
+
+    def _build_descent_from(self, port_world_xyz: np.ndarray,
+                            gripper_offset: np.ndarray,
+                            q_init: np.ndarray) -> np.ndarray:
+        """Build descent only, starting from a given q (e.g. end of
+        approach). Used by v44 to descend with REFINED port_world after
+        a mid-flight re-localization.
+        """
+        tip_offset = self._R_tcp @ gripper_offset
+        tcp_above = port_world_xyz + np.array([0, 0, ABOVE_PORT]) - tip_offset
+        descent = np.zeros((DESCENT_STEPS, 6))
+        q_prev = q_init.copy()
+        for i in range(DESCENT_STEPS):
+            z_off = ABOVE_PORT - (i / max(DESCENT_STEPS - 1, 1)) * (
+                ABOVE_PORT + INSERT_DEPTH
+            )
+            tcp_i = tcp_above.copy()
+            tcp_i[2] = port_world_xyz[2] + z_off - tip_offset[2]
+            descent[i] = self._solve_ik(tcp_i, q_prev)
+            q_prev = descent[i]
+        return descent
+
     def _build_trajectory(self, port_world_xyz: np.ndarray,
                           gripper_offset: np.ndarray) -> np.ndarray:
+        """Legacy single-shot trajectory. Kept for back-compat; v44 uses
+        _build_approach + _build_descent_from instead."""
+        approach, _, q_end = self._build_approach(port_world_xyz, gripper_offset)
+        descent = self._build_descent_from(port_world_xyz, gripper_offset, q_end)
+        return np.concatenate([approach, descent], axis=0)
+
+    def _build_trajectory_legacy(self, port_world_xyz: np.ndarray,
+                                 gripper_offset: np.ndarray) -> np.ndarray:
+        # Original implementation kept here in case we want a clean diff.
         tcp_home = self._d.site_xpos[self._tcp_site].copy()
         tip_offset = self._R_tcp @ gripper_offset
         tcp_above = port_world_xyz + np.array([0, 0, ABOVE_PORT]) - tip_offset
@@ -391,14 +485,59 @@ class OnlineIK(Policy):
             if obs_p is not None and len(obs_p.joint_states.position) >= 6:
                 start_pose = np.array(obs_p.joint_states.position[:6])
 
-        # ---- Localize port ----
-        obs_v = get_observation()
-        port_xy = None
-        if obs_v is not None:
+        # ---- Localize port (ensemble with wrist jiggle) ----
+        # Single-shot localizer at SAFE_POSE has 7-9 cm error in v41 traces.
+        # Jiggle wrist_1 by small offsets to vary camera viewpoint, run
+        # localizer per offset, take MEDIAN to reject outliers.
+        ensemble_msg = JointMotionUpdate(
+            target_stiffness=TRANSITION_STIFFNESS,
+            target_damping=TRANSITION_DAMPING,
+            trajectory_generation_mode=TrajectoryGenerationMode(
+                mode=TrajectoryGenerationMode.MODE_POSITION,
+            ),
+        )
+        offsets = [
+            0.0,
+            +LOC_ENSEMBLE_JIGGLE_RAD,
+            -LOC_ENSEMBLE_JIGGLE_RAD,
+            +LOC_ENSEMBLE_JIGGLE_RAD * 2,
+            -LOC_ENSEMBLE_JIGGLE_RAD * 2,
+        ][:LOC_ENSEMBLE_SAMPLES]
+        samples: list[np.ndarray] = []
+        for off in offsets:
+            q_jig = SAFE_POSE.copy()
+            q_jig[3] += off  # wrist_1 — tilts wrist, translates camera plane
+            ensemble_msg.target_state.positions = q_jig.tolist()
+            move_robot(joint_motion_update=ensemble_msg)
+            for _ in range(LOC_ENSEMBLE_SETTLE_TICKS):
+                self.sleep_for(1.0 / CONTROL_HZ)
+            o = get_observation()
+            if o is None:
+                continue
             try:
-                port_xy = self._predict_port_xy(obs_v)
+                p = self._predict_port_xy(o)
+                if p is not None:
+                    samples.append(p)
+                    self.get_logger().info(
+                        f"[loc] off={off:+.2f}rad → xy={p.round(4)}"
+                    )
             except Exception as e:
-                self.get_logger().warn(f"localizer failed: {e!r}")
+                self.get_logger().warn(f"loc sample @ off={off:+.2f} failed: {e!r}")
+        # Return wrist to SAFE_POSE
+        ensemble_msg.target_state.positions = SAFE_POSE.tolist()
+        move_robot(joint_motion_update=ensemble_msg)
+        for _ in range(LOC_ENSEMBLE_SETTLE_TICKS):
+            self.sleep_for(1.0 / CONTROL_HZ)
+
+        port_xy = None
+        if samples:
+            arr = np.stack(samples)
+            port_xy = np.median(arr, axis=0)
+            spread_mm = float(np.std(arr, axis=0).max() * 1000)
+            self.get_logger().info(
+                f"[loc] ENSEMBLE {len(samples)}/{LOC_ENSEMBLE_SAMPLES} "
+                f"samples → median xy={port_xy.round(4)} (max_std={spread_mm:.1f}mm)"
+            )
         if port_xy is None:
             # Fallback: aim at a generic forward position (board likely lives
             # at world (0.18, -0.05, 1.27) for SFP, (0.29, -0.09, 1.15) for SC).
@@ -414,41 +553,163 @@ class OnlineIK(Policy):
         _diag("port_predicted", port_world=port_world.tolist(),
               port_type=port_type, cable_type=cable_type)
 
-        # ---- Plan IK trajectory online ----
-        traj = self._build_trajectory(port_world, gripper_offset)
-        traj_dense = _densify(traj, max_per_joint_step=0.0015)
+        # ---- v44: split trajectory for mid-descent re-localization ----
+        # Build approach only first, play it, then re-localize from CLOSER
+        # viewpoint, then build descent with possibly-refined port_world.
+        approach, tcp_above_initial, q_after_approach = self._build_approach(
+            port_world, gripper_offset,
+        )
+        approach_dense = _densify(approach, max_per_joint_step=0.0015)
         self.get_logger().info(
-            f"trajectory: {len(traj_dense)} dense steps "
-            f"({len(traj_dense)/CONTROL_HZ:.1f}s)"
+            f"approach: {len(approach_dense)} dense steps "
+            f"({len(approach_dense)/CONTROL_HZ:.1f}s)"
         )
 
-        # ---- Swing safe → first_target ----
-        first_target = traj_dense[0]
+        # Swing safe → start of approach
+        first_target = approach_dense[0]
         _swing(start_pose, first_target, "safe→first_target")
         _settle(first_target, TRANSITION_HOLD, "first_target")
 
-        # ---- Play trajectory ----
-        descent_idx = APPROACH_STEPS  # in original (non-dense) trajectory
-        # Find equivalent index in dense trajectory: midpoint of total length
-        descent_mid_dense = len(traj_dense) // 2
-        for step, q in enumerate(traj_dense):
+        # Play approach
+        for step, q in enumerate(approach_dense):
             msg.target_state.positions = q.tolist()
             move_robot(joint_motion_update=msg)
-            if step == descent_mid_dense:
-                obs_m = get_observation()
-                if obs_m is not None and len(obs_m.joint_states.position) >= 6:
-                    _diag(
-                        "mid_descent",
-                        step=step,
-                        q_actual=list(obs_m.joint_states.position[:6]),
-                    )
             if step % 80 == 0:
-                send_feedback(f"step={step}/{len(traj_dense)}")
+                send_feedback(f"approach {step}/{len(approach_dense)}")
             self.sleep_for(1.0 / CONTROL_HZ)
+        # Settle briefly so cameras stabilize before re-localize
+        for _ in range(10):
+            msg.target_state.positions = approach_dense[-1].tolist()
+            move_robot(joint_motion_update=msg)
+            self.sleep_for(1.0 / CONTROL_HZ)
+
+        # ---- v44: mid-descent re-localization ----
+        # Gripper is now ~6 cm above the (rough) port estimate. Cameras
+        # see the port at MUCH higher resolution. Re-run the localizer;
+        # if the new prediction shifts XY by < REFINE_MAX_M (sanity cap
+        # for OOD viewpoints), use it for the descent target.
+        REFINE_MAX_M = 0.10
+        port_xy_refined = None
+        obs_refine = get_observation()
+        if obs_refine is not None:
+            try:
+                port_xy_refined = self._predict_port_xy(obs_refine)
+            except Exception as e:
+                self.get_logger().warn(f"[refine] localizer failed: {e!r}")
+        if port_xy_refined is not None:
+            delta = port_xy_refined - port_xy
+            delta_norm = float(np.linalg.norm(delta))
+            self.get_logger().info(
+                f"[refine] orig={port_xy.round(4)} new={port_xy_refined.round(4)} "
+                f"delta={delta_norm*1000:.1f}mm"
+            )
+            if delta_norm < REFINE_MAX_M:
+                port_xy = port_xy_refined
+                port_world[0:2] = port_xy
+                self.get_logger().info("[refine] APPLIED")
+            else:
+                self.get_logger().info(
+                    f"[refine] REJECTED (delta {delta_norm*1000:.1f}mm > "
+                    f"{REFINE_MAX_M*1000:.0f}mm — likely OOD prediction)"
+                )
+
+        # Build descent with (possibly refined) port_world, starting from
+        # the actual end-of-approach pose (q_after_approach).
+        descent = self._build_descent_from(
+            port_world, gripper_offset, q_after_approach,
+        )
+        descent_dense = _densify(descent, max_per_joint_step=0.0015)
+        self.get_logger().info(
+            f"descent: {len(descent_dense)} dense steps "
+            f"({len(descent_dense)/CONTROL_HZ:.1f}s)"
+        )
+
+        # Play descent
+        for step, q in enumerate(descent_dense):
+            msg.target_state.positions = q.tolist()
+            move_robot(joint_motion_update=msg)
+            if step % 80 == 0:
+                send_feedback(f"descent {step}/{len(descent_dense)}")
+            self.sleep_for(1.0 / CONTROL_HZ)
+
+        # Combine trajectories so the seat phase has a single anchor.
+        traj_dense = np.concatenate([approach_dense, descent_dense], axis=0)
 
         for _ in range(20):
             msg.target_state.positions = traj_dense[-1].tolist()
             move_robot(joint_motion_update=msg)
+            self.sleep_for(1.0 / CONTROL_HZ)
+
+        # ---- v44: vertical soft-push (back to v41 logic, no spiral/probe) ----
+        # The probe grid drifted the cable away from port (v43 = 83/300).
+        # Vertical push at predicted port (v41) was best so far at 92.82.
+        # v44 keeps v41's seat phase but pairs it with mid-descent re-localize.
+        q_anchor = traj_dense[-1].copy()
+        d_anchor = self._mj.MjData(self._m)
+        d_anchor.qpos[:] = self._d.qpos[:]
+        d_anchor.qpos[self._qids] = q_anchor
+        self._mj.mj_forward(self._m, d_anchor)
+        tcp_anchor = d_anchor.site_xpos[self._tcp_site].copy()
+
+        seat_msg = JointMotionUpdate(
+            target_stiffness=SEAT_STIFFNESS,
+            target_damping=SEAT_DAMPING,
+            trajectory_generation_mode=TrajectoryGenerationMode(
+                mode=TrajectoryGenerationMode.MODE_POSITION,
+            ),
+        )
+
+        # Fz baseline (10 ticks at anchor under soft stiffness)
+        fz_buf = []
+        for _ in range(10):
+            seat_msg.target_state.positions = q_anchor.tolist()
+            move_robot(joint_motion_update=seat_msg)
+            o = get_observation()
+            if o is not None:
+                try:
+                    fz_buf.append(float(o.wrist_wrench.wrench.force.z))
+                except Exception:
+                    pass
+            self.sleep_for(1.0 / CONTROL_HZ)
+        fz_baseline = float(np.mean(fz_buf)) if fz_buf else 0.0
+        self.get_logger().info(f"[seat] Fz baseline={fz_baseline:.2f}N")
+
+        q_prev = q_anchor.copy()
+        last_q = q_anchor.copy()
+        push_step = -1
+        for i in range(SEAT_PUSH_STEPS):
+            dz = -((i + 1) / SEAT_PUSH_STEPS) * SEAT_PUSH_DEPTH_M
+            target = tcp_anchor + np.array([0.0, 0.0, dz])
+            q_target = self._solve_ik(target, q_prev)
+            q_prev = q_target
+            last_q = q_target
+
+            seat_msg.target_state.positions = q_target.tolist()
+            move_robot(joint_motion_update=seat_msg)
+            o = get_observation()
+            fz = None
+            if o is not None:
+                try:
+                    fz = float(o.wrist_wrench.wrench.force.z)
+                except Exception:
+                    fz = None
+            if fz is not None and (fz - fz_baseline) > SEAT_FZ_BOTTOM_N:
+                push_step = i
+                self.get_logger().info(
+                    f"[seat] bottomed @ step {i}/{SEAT_PUSH_STEPS} "
+                    f"(dz={dz*1000:.1f}mm, fz={fz:.2f}N)"
+                )
+                break
+            if i % 20 == 0:
+                send_feedback(
+                    f"push step={i}/{SEAT_PUSH_STEPS} dz={dz*1000:.1f}mm"
+                )
+            self.sleep_for(1.0 / CONTROL_HZ)
+
+        # Final hold so the eval engine sees a stable seated state.
+        for _ in range(SEAT_FINAL_HOLD_STEPS):
+            seat_msg.target_state.positions = last_q.tolist()
+            move_robot(joint_motion_update=seat_msg)
             self.sleep_for(1.0 / CONTROL_HZ)
 
         obs_e = get_observation()
@@ -457,5 +718,10 @@ class OnlineIK(Policy):
             if obs_e is not None and len(obs_e.joint_states.position) >= 6
             else None
         )
-        _diag("insert_cable_exit", q_end=q_end, port_world=port_world.tolist())
+        _diag(
+            "insert_cable_exit",
+            q_end=q_end,
+            port_world=port_world.tolist(),
+            push_step=push_step,
+        )
         return True

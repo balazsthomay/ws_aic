@@ -1,0 +1,83 @@
+# v43: v26 OnlineIK + force-feedback spiral seat at the end of descent.
+#
+# v26 (cluster 90.91) drops the cable within ~3-5 cm of the port but never
+# enters the hole — proximity-only T3=30/50. v40 adds a spiral search after
+# descent: ultra-soft stiffness + 2 cm spiral radius + watch wrist Fz for
+# the cable-into-hole drop signature. If found, push 1.2 cm further to seat.
+#
+# Pure inference change vs v26 — same DINO localizer weights, same
+# trajectory plan. Only OnlineIK.py is modified (added SEAT_* constants
+# and the spiral block at the end of insert_cable). No retraining.
+
+FROM my-solution:v1
+
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PIXI_PY=/ws_aic/src/aic/.pixi/envs/default/bin/python3
+RUN $PIXI_PY -m ensurepip --default-pip \
+    && $PIXI_PY -m pip install --no-cache-dir --no-deps --root-user-action=ignore \
+        transformers==4.56.0 tokenizers==0.22.0 safetensors==0.4.5 \
+        regex==2024.7.24 hf-xet huggingface_hub==0.34.0 \
+    && $PIXI_PY -m pip install --no-cache-dir --root-user-action=ignore \
+        mujoco==3.6.0
+
+ENV HF_HOME=/opt/hf
+ENV TRANSFORMERS_CACHE=/opt/hf
+ENV HF_HUB_DOWNLOAD_TIMEOUT=300
+
+ARG HF_TOKEN
+RUN $PIXI_PY -c "import os; os.environ['HF_TOKEN']='${HF_TOKEN}'; \
+    from transformers import AutoModel, AutoImageProcessor; \
+    AutoImageProcessor.from_pretrained('facebook/dinov3-vits16-pretrain-lvd1689m', cache_dir='/opt/hf'); \
+    AutoModel.from_pretrained('facebook/dinov3-vits16-pretrain-lvd1689m', cache_dir='/opt/hf')"
+
+RUN $PIXI_PY -c "import os; os.environ['HF_TOKEN']='${HF_TOKEN}'; \
+    from transformers import AutoModel, AutoImageProcessor; \
+    p = AutoModel.from_pretrained('facebook/dinov3-vits16-pretrain-lvd1689m', cache_dir='/opt/hf'); \
+    p.save_pretrained('/ws_aic/src/aic/aic_example_policies/aic_example_policies/ros/weights/dinov2-small'); \
+    pp = AutoImageProcessor.from_pretrained('facebook/dinov3-vits16-pretrain-lvd1689m', cache_dir='/opt/hf'); \
+    pp.save_pretrained('/ws_aic/src/aic/aic_example_policies/aic_example_policies/ros/weights/dinov2-small')"
+
+ENV HF_HUB_OFFLINE=1
+ENV TRANSFORMERS_OFFLINE=1
+
+# --- MJCF scene + meshes (for online IK) ---
+COPY aic_utils/aic_mujoco/mjcf/scene.xml \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/scene/scene.xml
+COPY aic_utils/aic_mujoco/mjcf/aic_world.xml \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/scene/aic_world.xml
+COPY aic_utils/aic_mujoco/mjcf/aic_robot.xml \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/scene/aic_robot.xml
+COPY aic_utils/aic_mujoco/mjcf/meshes \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/scene/meshes
+
+# --- Policy code (OnlineIK has the v40 spiral seat addition) ---
+COPY aic_example_policies/aic_example_policies/ros/OnlineIK.py \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/OnlineIK.py
+COPY aic_example_policies/aic_example_policies/ros/ScriptedVision.py \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/ScriptedVision.py
+COPY aic_example_policies/aic_example_policies/ros/ScriptedPlay.py \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/ScriptedPlay.py
+
+# --- Localizer weights (carry forward from v26) ---
+COPY aic_example_policies/aic_example_policies/ros/weights/port_localizer_dinov2.pt \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/port_localizer_dinov2.pt
+COPY aic_example_policies/aic_example_policies/ros/weights/port_localizer_stats.npz \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/port_localizer_stats.npz
+
+# Carry forward scripted_traj.npz for ScriptedPlay fallback.
+COPY aic_example_policies/aic_example_policies/ros/weights/scripted_traj.npz \
+     /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/scripted_traj.npz
+
+# Mirror DINO weights into the runtime path.
+RUN cp -r /ws_aic/src/aic/aic_example_policies/aic_example_policies/ros/weights/dinov2-small \
+    /ws_aic/src/aic/.pixi/envs/default/lib/python3.12/site-packages/aic_example_policies/ros/weights/dinov2-small
+
+COPY docker/aic_model/entrypoint_v7.sh /entrypoint.sh
+RUN chmod 755 /entrypoint.sh
+
+ENV AIC_DIAG_URL="https://balazs-thomay--aic-diag-collect.modal.run"
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["--ros-args", "-p", "policy:=aic_example_policies.ros.OnlineIK"]
