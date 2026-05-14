@@ -48,7 +48,8 @@ echo "[gcp_eval] pulls done"
   echo 'services:'
   echo '  eval:'
   echo '    image: ghcr.io/intrinsic-dev/aic/aic_eval'
-  echo '    command: gazebo_gui:=false launch_rviz:=false ground_truth:=false start_aic_engine:=true shutdown_on_aic_engine_exit:=true'
+  : "${GROUND_TRUTH:=false}"
+  echo "    command: gazebo_gui:=false launch_rviz:=false ground_truth:=${GROUND_TRUTH} start_aic_engine:=true shutdown_on_aic_engine_exit:=true"
   echo '    networks: [default]'
   echo '    environment:'
   echo '      AIC_EVAL_PASSWD: CHANGE_IN_PROD'
